@@ -1,0 +1,20 @@
+{
+  "name": "forgeguard_build_iajbrdzz",
+  "version": "1.0.0",
+  "description": "Othello/FELLO is a multi-agent, ethics-first AI system built in Python that functions as a deeply personalized life intelligence platform. The architecture follows a five-layer brain-inspired model. At the top, an OutputGate applies final ethical, safety, and consent filters before any output reaches the user.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HAAIL-Universe/othellomini.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HAAIL-Universe/othellomini/issues"
+  },
+  "homepage": "https://github.com/HAAIL-Universe/othellomini#readme"
+}
