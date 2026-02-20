@@ -1,0 +1,42 @@
+{
+  "description": "Architectural boundaries for OthelloMini, a multi-agent ethics-first AI life intelligence platform. This contract defines layer separation rules to enforce the brain-inspired five-layer architecture with strict ethical guardrails, preventing bypass of consent mechanisms and maintaining clear separation between core intelligence, agent orchestration, domain logic, and infrastructure concerns.",
+  "layers": [
+    {
+      "name": "agents",
+      "glob": "src/agents/**",
+      "forbidden": [
+        "src/infrastructure/**",
+        "src/api/**"
+      ],
+      "description": "Multi-agent personalization layer containing FELLO core engine, specialized sub-agents (psychological modeling, behavior tracking, aspiration monitoring, mood analysis), RealityAgent for proactive interventions, and Othello ethical gatekeeper. This layer contains pure agent logic and must not directly access infrastructure or API layers."
+    },
+    {
+      "name": "core",
+      "glob": "src/core/**",
+      "forbidden": [
+        "src/agents/**",
+        "src/api/**"
+      ],
+      "description": "Core domain models and business logic including consent tier management (Passive/Suggestive/Active/Autonomous), psychological profile schemas, user modeling primitives, ethical filtering rules, and OutputGate validation logic. This layer defines the essential domain concepts and must remain independent of agent implementations and API concerns."
+    },
+    {
+      "name": "api",
+      "glob": "src/api/**",
+      "forbidden": [
+        "src/infrastructure/**"
+      ],
+      "description": "Application programming interfaces, HTTP endpoints, GraphQL resolvers, consent dashboard endpoints, suggestion delivery mechanisms, and external integration points. This layer orchestrates requests between clients and the agent/core layers but must not directly access low-level infrastructure."
+    },
+    {
+      "name": "infrastructure",
+      "glob": "src/infrastructure/**",
+      "forbidden": [
+        "src/agents/**",
+        "src/core/**",
+        "src/api/**"
+      ],
+      "description": "Low-level infrastructure concerns including database access (persistent user psychological models, consent preferences, historical interaction logs), external service clients (LLM providers, calendar APIs, notification systems), caching, logging, configuration management, and deployment utilities. This layer is imported by higher layers but must never depend on them to maintain clean dependency flow."
+    }
+  ],
+  "known_violations": []
+}

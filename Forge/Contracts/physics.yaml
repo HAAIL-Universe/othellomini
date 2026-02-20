@@ -1,0 +1,2311 @@
+info:
+  title: OthelloMini API
+  version: 1.0.0
+  description: |
+    REST API for OthelloMini, a multi-agent, ethics-first AI life intelligence platform.
+    
+    The system provides deeply personalized AI assistance through a multi-agent architecture
+    with consent-tiered ethical filtering. All AI actions pass through Othello (ethical gatekeeper)
+    and FELLO (personalization engine) with transparent user control.
+    
+    Core capabilities:
+    - Conversational chat interface with multi-agent AI reasoning
+    - Consent-tiered ethical filtering (Passive → Suggestive → Active → Autonomous)
+    - Persistent psychological modeling and digital shadow tracking
+    - Proactive reality-shaping interventions with user consent
+    - Transparent ethical validation and agent reasoning traces
+
+servers:
+  - url: https://api.othellomini.com/v1
+    description: Production API server
+  - url: http://localhost:8000/v1
+    description: Local development server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user account
+      description: Create a new user account with email and password. Initializes default consent tier (Passive) and creates empty digital shadow.
+      auth: none
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - email
+            - password
+            - full_name
+          properties:
+            email:
+              type: string
+              format: email
+              description: User's email address (must be unique)
+            password:
+              type: string
+              format: password
+              minLength: 8
+              description: User password (min 8 characters, must include letter and number)
+            full_name:
+              type: string
+              description: User's full name
+      responses:
+        201:
+          description: User successfully registered
+          schema:
+            type: object
+            properties:
+              user_id:
+                type: string
+                format: uuid
+                description: Unique user identifier
+              email:
+                type: string
+              full_name:
+                type: string
+              consent_tier:
+                type: string
+                enum: [passive, suggestive, active, autonomous]
+                default: passive
+              created_at:
+                type: string
+                format: datetime
+        400:
+          description: Invalid request (validation error)
+          schema:
+            $ref: '#/schemas/Error'
+        409:
+          description: Email already registered
+          schema:
+            $ref: '#/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Authenticate user and obtain access token
+      description: Login with email and password to receive JWT access and refresh tokens.
+      auth: none
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              format: password
+      responses:
+        200:
+          description: Successfully authenticated
+          schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+                description: JWT access token (expires in 1 hour)
+              refresh_token:
+                type: string
+                description: JWT refresh token (expires in 30 days)
+              token_type:
+                type: string
+                default: bearer
+              expires_in:
+                type: integer
+                description: Access token expiration time in seconds
+              user:
+                $ref: '#/schemas/User'
+        401:
+          description: Invalid credentials
+          schema:
+            $ref: '#/schemas/Error'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Obtain a new access token using a valid refresh token.
+      auth: none
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - refresh_token
+          properties:
+            refresh_token:
+              type: string
+              description: Valid refresh token
+      responses:
+        200:
+          description: New access token issued
+          schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+              token_type:
+                type: string
+              expires_in:
+                type: integer
+        401:
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/schemas/Error'
+
+  /auth/logout:
+    post:
+      summary: Logout and invalidate tokens
+      description: Invalidate the current access and refresh tokens.
+      auth: bearer
+      responses:
+        204:
+          description: Successfully logged out
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /conversations:
+    get:
+      summary: List user's conversation threads
+      description: Retrieve all conversation threads for the authenticated user, ordered by most recent activity.
+      auth: bearer
+      parameters:
+        - name: limit
+          in: query
+          type: integer
+          default: 50
+          description: Maximum number of conversations to return
+        - name: offset
+          in: query
+          type: integer
+          default: 0
+          description: Pagination offset
+        - name: archived
+          in: query
+          type: boolean
+          default: false
+          description: Include archived conversations
+      responses:
+        200:
+          description: List of conversations
+          schema:
+            type: object
+            properties:
+              conversations:
+                type: array
+                items:
+                  $ref: '#/schemas/Conversation'
+              total:
+                type: integer
+                description: Total number of conversations
+              limit:
+                type: integer
+              offset:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    post:
+      summary: Create a new conversation thread
+      description: Start a new conversation with the AI system.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Optional conversation title (auto-generated if not provided)
+            initial_message:
+              type: string
+              description: Optional first message to send
+      responses:
+        201:
+          description: Conversation created
+          schema:
+            $ref: '#/schemas/Conversation'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /conversations/{conversation_id}:
+    get:
+      summary: Get conversation details
+      description: Retrieve full details of a specific conversation including all messages.
+      auth: bearer
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+          description: Conversation identifier
+      responses:
+        200:
+          description: Conversation details
+          schema:
+            $ref: '#/schemas/ConversationDetail'
+        404:
+          description: Conversation not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    patch:
+      summary: Update conversation metadata
+      description: Update conversation title or archive status.
+      auth: bearer
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+            archived:
+              type: boolean
+      responses:
+        200:
+          description: Conversation updated
+          schema:
+            $ref: '#/schemas/Conversation'
+        404:
+          description: Conversation not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    delete:
+      summary: Delete conversation
+      description: Permanently delete a conversation and all associated messages.
+      auth: bearer
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        204:
+          description: Conversation deleted
+        404:
+          description: Conversation not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /conversations/{conversation_id}/messages:
+    get:
+      summary: Get conversation messages
+      description: Retrieve paginated messages from a conversation thread.
+      auth: bearer
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: limit
+          in: query
+          type: integer
+          default: 50
+          description: Maximum number of messages to return
+        - name: before
+          in: query
+          type: string
+          format: uuid
+          description: Return messages before this message ID (for pagination)
+      responses:
+        200:
+          description: List of messages
+          schema:
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  $ref: '#/schemas/Message'
+              has_more:
+                type: boolean
+                description: Whether more messages are available
+        404:
+          description: Conversation not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    post:
+      summary: Send a message in conversation
+      description: |
+        Send a user message to the AI system. The message is processed through the multi-agent
+        pipeline (FELLO, sub-agents, RealityAgent) and filtered by Othello ethical gate.
+        
+        Response includes AI reply, ethical validation details, and any consent prompts.
+      auth: bearer
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - content
+          properties:
+            content:
+              type: string
+              description: Message text content
+            attachments:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Optional attachment IDs (future feature)
+      responses:
+        201:
+          description: Message sent and AI response generated
+          schema:
+            type: object
+            properties:
+              user_message:
+                $ref: '#/schemas/Message'
+              ai_message:
+                $ref: '#/schemas/Message'
+              ethical_validation:
+                $ref: '#/schemas/EthicalValidation'
+              consent_prompts:
+                type: array
+                items:
+                  $ref: '#/schemas/ConsentPrompt'
+                description: Actions requiring user consent
+        404:
+          description: Conversation not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+        429:
+          description: Rate limit exceeded
+          schema:
+            $ref: '#/schemas/Error'
+
+  /messages/{message_id}/reactions:
+    post:
+      summary: React to a message
+      description: Add a reaction (like, dislike, flag) to a message for feedback and model improvement.
+      auth: bearer
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - reaction_type
+          properties:
+            reaction_type:
+              type: string
+              enum: [like, dislike, flag, helpful, unhelpful]
+            feedback_text:
+              type: string
+              description: Optional feedback text
+      responses:
+        201:
+          description: Reaction added
+          schema:
+            type: object
+            properties:
+              message_id:
+                type: string
+                format: uuid
+              reaction_type:
+                type: string
+              created_at:
+                type: string
+                format: datetime
+        404:
+          description: Message not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /consent/tier:
+    get:
+      summary: Get current consent tier
+      description: Retrieve the user's current consent/autonomy tier setting.
+      auth: bearer
+      responses:
+        200:
+          description: Current consent tier
+          schema:
+            type: object
+            properties:
+              consent_tier:
+                type: string
+                enum: [passive, suggestive, active, autonomous]
+                description: |
+                  - passive: AI only responds when asked, no proactive suggestions
+                  - suggestive: AI offers suggestions but never acts
+                  - active: AI can take pre-approved actions with confirmation
+                  - autonomous: AI can execute approved action types without prompt
+              tier_description:
+                type: string
+              allowed_actions:
+                type: array
+                items:
+                  type: string
+                description: Action types permitted at this tier
+              updated_at:
+                type: string
+                format: datetime
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    put:
+      summary: Update consent tier
+      description: Change the user's consent/autonomy tier. This controls how proactive the AI can be.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - consent_tier
+          properties:
+            consent_tier:
+              type: string
+              enum: [passive, suggestive, active, autonomous]
+            confirmation:
+              type: boolean
+              description: Must be true to confirm tier change
+      responses:
+        200:
+          description: Consent tier updated
+          schema:
+            type: object
+            properties:
+              consent_tier:
+                type: string
+              tier_description:
+                type: string
+              allowed_actions:
+                type: array
+                items:
+                  type: string
+              updated_at:
+                type: string
+                format: datetime
+        400:
+          description: Invalid tier or missing confirmation
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /consent/prompts:
+    get:
+      summary: List pending consent prompts
+      description: Retrieve all actions awaiting user consent approval.
+      auth: bearer
+      parameters:
+        - name: status
+          in: query
+          type: string
+          enum: [pending, approved, denied, expired]
+          default: pending
+          description: Filter by prompt status
+      responses:
+        200:
+          description: List of consent prompts
+          schema:
+            type: object
+            properties:
+              prompts:
+                type: array
+                items:
+                  $ref: '#/schemas/ConsentPrompt'
+              total:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /consent/prompts/{prompt_id}:
+    get:
+      summary: Get consent prompt details
+      description: Retrieve detailed information about a specific consent prompt including ethical reasoning.
+      auth: bearer
+      parameters:
+        - name: prompt_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: Consent prompt details
+          schema:
+            $ref: '#/schemas/ConsentPromptDetail'
+        404:
+          description: Prompt not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    post:
+      summary: Respond to consent prompt
+      description: Approve or deny a consent prompt for a proposed AI action.
+      auth: bearer
+      parameters:
+        - name: prompt_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - decision
+          properties:
+            decision:
+              type: string
+              enum: [approve, deny, modify]
+            modifications:
+              type: object
+              description: Requested modifications if decision is 'modify'
+            feedback:
+              type: string
+              description: Optional feedback about the decision
+      responses:
+        200:
+          description: Consent decision recorded
+          schema:
+            type: object
+            properties:
+              prompt_id:
+                type: string
+                format: uuid
+              decision:
+                type: string
+              status:
+                type: string
+                enum: [approved, denied, modified, pending_modification]
+              action_executed:
+                type: boolean
+                description: Whether the action was immediately executed
+              execution_result:
+                type: object
+                description: Result of action execution if applicable
+              decided_at:
+                type: string
+                format: datetime
+        404:
+          description: Prompt not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /actions:
+    get:
+      summary: List recent AI actions
+      description: Retrieve history of AI actions (both executed and proposed) with filtering options.
+      auth: bearer
+      parameters:
+        - name: status
+          in: query
+          type: string
+          enum: [proposed, approved, denied, executed, failed]
+          description: Filter by action status
+        - name: action_type
+          in: query
+          type: string
+          description: Filter by action type (e.g., schedule_reminder, send_email)
+        - name: limit
+          in: query
+          type: integer
+          default: 50
+        - name: offset
+          in: query
+          type: integer
+          default: 0
+      responses:
+        200:
+          description: List of actions
+          schema:
+            type: object
+            properties:
+              actions:
+                type: array
+                items:
+                  $ref: '#/schemas/Action'
+              total:
+                type: integer
+              limit:
+                type: integer
+              offset:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /actions/{action_id}:
+    get:
+      summary: Get action details
+      description: Retrieve full details of a specific action including ethical validation and execution log.
+      auth: bearer
+      parameters:
+        - name: action_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: Action details
+          schema:
+            $ref: '#/schemas/ActionDetail'
+        404:
+          description: Action not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow:
+    get:
+      summary: Get digital shadow summary
+      description: |
+        Retrieve the user's digital shadow - the persistent psychological model built by
+        FELLO and sub-agents. Includes personality traits, behavioral patterns, goals,
+        mood history, and other personalization data.
+      auth: bearer
+      parameters:
+        - name: detail_level
+          in: query
+          type: string
+          enum: [summary, detailed, full]
+          default: summary
+          description: Level of detail to return
+      responses:
+        200:
+          description: Digital shadow data
+          schema:
+            $ref: '#/schemas/DigitalShadow'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow/traits:
+    get:
+      summary: Get personality traits
+      description: Retrieve tracked personality traits and psychological patterns.
+      auth: bearer
+      responses:
+        200:
+          description: Personality traits
+          schema:
+            type: object
+            properties:
+              traits:
+                type: array
+                items:
+                  $ref: '#/schemas/PersonalityTrait'
+              last_updated:
+                type: string
+                format: datetime
+              confidence_score:
+                type: number
+                format: float
+                description: Confidence in trait modeling (0-1)
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow/goals:
+    get:
+      summary: Get tracked goals
+      description: Retrieve user goals being tracked and coached by the system.
+      auth: bearer
+      parameters:
+        - name: status
+          in: query
+          type: string
+          enum: [active, completed, paused, abandoned]
+          description: Filter by goal status
+      responses:
+        200:
+          description: List of goals
+          schema:
+            type: object
+            properties:
+              goals:
+                type: array
+                items:
+                  $ref: '#/schemas/Goal'
+              total:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    post:
+      summary: Create a new goal
+      description: Define a new goal for the AI to track and provide coaching on.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - title
+            - goal_type
+          properties:
+            title:
+              type: string
+              description: Goal title
+            description:
+              type: string
+              description: Detailed goal description
+            goal_type:
+              type: string
+              enum: [habit, achievement, learning, health, relationship, career, financial]
+            target_date:
+              type: string
+              format: date
+              description: Optional target completion date
+            metrics:
+              type: array
+              items:
+                type: object
+                properties:
+                  metric_name:
+                    type: string
+                  target_value:
+                    type: number
+                  unit:
+                    type: string
+            coaching_preferences:
+              type: object
+              properties:
+                frequency:
+                  type: string
+                  enum: [daily, weekly, biweekly, monthly]
+                  description: How often to receive coaching prompts
+                reminder_time:
+                  type: string
+                  format: time
+                  description: Preferred time for reminders
+      responses:
+        201:
+          description: Goal created
+          schema:
+            $ref: '#/schemas/Goal'
+        400:
+          description: Invalid request
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow/goals/{goal_id}:
+    get:
+      summary: Get goal details
+      description: Retrieve detailed information about a specific goal including progress and AI insights.
+      auth: bearer
+      parameters:
+        - name: goal_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: Goal details
+          schema:
+            $ref: '#/schemas/GoalDetail'
+        404:
+          description: Goal not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    patch:
+      summary: Update goal
+      description: Update goal details, status, or metrics.
+      auth: bearer
+      parameters:
+        - name: goal_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+            status:
+              type: string
+              enum: [active, completed, paused, abandoned]
+            target_date:
+              type: string
+              format: date
+            metrics:
+              type: array
+              items:
+                type: object
+      responses:
+        200:
+          description: Goal updated
+          schema:
+            $ref: '#/schemas/Goal'
+        404:
+          description: Goal not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    delete:
+      summary: Delete goal
+      description: Permanently delete a goal and its tracking history.
+      auth: bearer
+      parameters:
+        - name: goal_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        204:
+          description: Goal deleted
+        404:
+          description: Goal not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow/goals/{goal_id}/progress:
+    post:
+      summary: Log goal progress
+      description: Record progress update for a goal.
+      auth: bearer
+      parameters:
+        - name: goal_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          properties:
+            metrics:
+              type: array
+              items:
+                type: object
+                properties:
+                  metric_name:
+                    type: string
+                  value:
+                    type: number
+            notes:
+              type: string
+              description: Optional progress notes
+            mood:
+              type: string
+              enum: [very_negative, negative, neutral, positive, very_positive]
+              description: Mood during this progress update
+      responses:
+        201:
+          description: Progress logged
+          schema:
+            type: object
+            properties:
+              progress_id:
+                type: string
+                format: uuid
+              goal_id:
+                type: string
+                format: uuid
+              metrics:
+                type: array
+                items:
+                  type: object
+              ai_feedback:
+                type: string
+                description: AI-generated feedback on progress
+              created_at:
+                type: string
+                format: datetime
+        404:
+          description: Goal not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow/mood:
+    get:
+      summary: Get mood history
+      description: Retrieve tracked mood data over time.
+      auth: bearer
+      parameters:
+        - name: start_date
+          in: query
+          type: string
+          format: date
+          description: Start of date range
+        - name: end_date
+          in: query
+          type: string
+          format: date
+          description: End of date range
+        - name: aggregation
+          in: query
+          type: string
+          enum: [daily, weekly, monthly]
+          default: daily
+      responses:
+        200:
+          description: Mood history
+          schema:
+            type: object
+            properties:
+              mood_entries:
+                type: array
+                items:
+                  $ref: '#/schemas/MoodEntry'
+              summary_stats:
+                type: object
+                properties:
+                  average_mood:
+                    type: number
+                  mood_volatility:
+                    type: number
+                  patterns:
+                    type: array
+                    items:
+                      type: string
+                    description: AI-detected mood patterns
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    post:
+      summary: Log mood entry
+      description: Manually log current mood and optional context.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - mood_level
+          properties:
+            mood_level:
+              type: string
+              enum: [very_negative, negative, neutral, positive, very_positive]
+            mood_tags:
+              type: array
+              items:
+                type: string
+              description: Tags like 'anxious', 'excited', 'tired', 'energized'
+            notes:
+              type: string
+              description: Optional context notes
+            activities:
+              type: array
+              items:
+                type: string
+              description: Recent activities that may have influenced mood
+      responses:
+        201:
+          description: Mood logged
+          schema:
+            $ref: '#/schemas/MoodEntry'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /shadow/behavior-patterns:
+    get:
+      summary: Get behavioral patterns
+      description: Retrieve AI-detected behavioral patterns and routines.
+      auth: bearer
+      responses:
+        200:
+          description: Behavioral patterns
+          schema:
+            type: object
+            properties:
+              patterns:
+                type: array
+                items:
+                  $ref: '#/schemas/BehaviorPattern'
+              last_analyzed:
+                type: string
+                format: datetime
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /agents/reasoning:
+    get:
+      summary: Get agent reasoning traces
+      description: |
+        Retrieve reasoning traces from FELLO and sub-agents for transparency.
+        Shows how the AI arrived at suggestions and decisions.
+      auth: bearer
+      parameters:
+        - name: conversation_id
+          in: query
+          type: string
+          format: uuid
+          description: Filter by conversation
+        - name: message_id
+          in: query
+          type: string
+          format: uuid
+          description: Get reasoning for specific message
+        - name: limit
+          in: query
+          type: integer
+          default: 20
+      responses:
+        200:
+          description: Agent reasoning traces
+          schema:
+            type: object
+            properties:
+              traces:
+                type: array
+                items:
+                  $ref: '#/schemas/ReasoningTrace'
+              total:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /agents/status:
+    get:
+      summary: Get agent system status
+      description: Health check and status of all agent systems (FELLO, sub-agents, Othello gate).
+      auth: bearer
+      responses:
+        200:
+          description: Agent system status
+          schema:
+            type: object
+            properties:
+              fello_status:
+                type: string
+                enum: [active, idle, processing, error]
+              sub_agents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    agent_type:
+                      type: string
+                      description: e.g., TraitAgent, BehaviorAgent, AspirationAgent
+                    status:
+                      type: string
+                      enum: [active, idle, processing, error]
+                    last_active:
+                      type: string
+                      format: datetime
+              othello_gate_status:
+                type: string
+                enum: [active, error]
+              reality_agent_status:
+                type: string
+                enum: [active, idle, error]
+              system_health:
+                type: string
+                enum: [healthy, degraded, error]
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /ethics/validation-logs:
+    get:
+      summary: Get ethical validation logs
+      description: |
+        Retrieve logs of Othello's ethical filtering decisions for transparency.
+        Shows what content was filtered, modified, or flagged and why.
+      auth: bearer
+      parameters:
+        - name: start_date
+          in: query
+          type: string
+          format: date
+        - name: end_date
+          in: query
+          type: string
+          format: date
+        - name: severity
+          in: query
+          type: string
+          enum: [info, warning, concern, critical]
+          description: Filter by severity level
+        - name: limit
+          in: query
+          type: integer
+          default: 50
+      responses:
+        200:
+          description: Ethical validation logs
+          schema:
+            type: object
+            properties:
+              logs:
+                type: array
+                items:
+                  $ref: '#/schemas/EthicalValidationLog'
+              total:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /ethics/guidelines:
+    get:
+      summary: Get active ethical guidelines
+      description: Retrieve the current ethical guidelines and rules governing AI behavior.
+      auth: bearer
+      responses:
+        200:
+          description: Ethical guidelines
+          schema:
+            type: object
+            properties:
+              guidelines:
+                type: array
+                items:
+                  $ref: '#/schemas/EthicalGuideline'
+              version:
+                type: string
+              last_updated:
+                type: string
+                format: datetime
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /user/profile:
+    get:
+      summary: Get user profile
+      description: Retrieve user account information and preferences.
+      auth: bearer
+      responses:
+        200:
+          description: User profile
+          schema:
+            $ref: '#/schemas/UserProfile'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+    patch:
+      summary: Update user profile
+      description: Update user account information and preferences.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          properties:
+            full_name:
+              type: string
+            email:
+              type: string
+              format: email
+            timezone:
+              type: string
+              description: IANA timezone (e.g., America/New_York)
+            language:
+              type: string
+              description: ISO 639-1 language code
+            notification_preferences:
+              type: object
+              properties:
+                email_notifications:
+                  type: boolean
+                push_notifications:
+                  type: boolean
+                daily_summary:
+                  type: boolean
+                goal_reminders:
+                  type: boolean
+      responses:
+        200:
+          description: Profile updated
+          schema:
+            $ref: '#/schemas/UserProfile'
+        400:
+          description: Invalid request
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /user/data-export:
+    post:
+      summary: Request data export
+      description: Request a complete export of all user data (GDPR compliance).
+      auth: bearer
+      responses:
+        202:
+          description: Export request accepted
+          schema:
+            type: object
+            properties:
+              export_id:
+                type: string
+                format: uuid
+              status:
+                type: string
+                enum: [pending, processing, completed, failed]
+              estimated_completion:
+                type: string
+                format: datetime
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /user/data-export/{export_id}:
+    get:
+      summary: Get data export status
+      description: Check status of a data export request.
+      auth: bearer
+      parameters:
+        - name: export_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: Export status
+          schema:
+            type: object
+            properties:
+              export_id:
+                type: string
+                format: uuid
+              status:
+                type: string
+                enum: [pending, processing, completed, failed]
+              download_url:
+                type: string
+                description: Temporary download URL (if completed)
+              expires_at:
+                type: string
+                format: datetime
+                description: When download URL expires
+              created_at:
+                type: string
+                format: datetime
+        404:
+          description: Export not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /user/account:
+    delete:
+      summary: Delete user account
+      description: Permanently delete user account and all associated data.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - confirmation
+            - password
+          properties:
+            confirmation:
+              type: string
+              description: Must be 'DELETE' to confirm
+            password:
+              type: string
+              format: password
+              description: User password for verification
+            feedback:
+              type: string
+              description: Optional feedback about account deletion
+      responses:
+        204:
+          description: Account deleted
+        400:
+          description: Invalid confirmation or password
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /notifications:
+    get:
+      summary: Get notifications
+      description: Retrieve user notifications including consent prompts, goal reminders, and system updates.
+      auth: bearer
+      parameters:
+        - name: unread_only
+          in: query
+          type: boolean
+          default: false
+        - name: notification_type
+          in: query
+          type: string
+          enum: [consent_prompt, goal_reminder, system_update, achievement, ai_insight]
+        - name: limit
+          in: query
+          type: integer
+          default: 50
+      responses:
+        200:
+          description: List of notifications
+          schema:
+            type: object
+            properties:
+              notifications:
+                type: array
+                items:
+                  $ref: '#/schemas/Notification'
+              unread_count:
+                type: integer
+              total:
+                type: integer
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /notifications/{notification_id}/read:
+    post:
+      summary: Mark notification as read
+      description: Mark a specific notification as read.
+      auth: bearer
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          type: string
+          format: uuid
+      responses:
+        204:
+          description: Notification marked as read
+        404:
+          description: Notification not found
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      description: Mark all user notifications as read.
+      auth: bearer
+      responses:
+        204:
+          description: All notifications marked as read
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+  /feedback:
+    post:
+      summary: Submit general feedback
+      description: Submit feedback, bug reports, or feature requests.
+      auth: bearer
+      request:
+        content_type: application/json
+        schema:
+          type: object
+          required:
+            - feedback_type
+            - content
+          properties:
+            feedback_type:
+              type: string
+              enum: [bug_report, feature_request, general_feedback, ethical_concern]
+            content:
+              type: string
+              description: Feedback content
+            severity:
+              type: string
+              enum: [low, medium, high, critical]
+              description: For bug reports
+            context:
+              type: object
+              description: Additional context (e.g., screen, action performed)
+      responses:
+        201:
+          description: Feedback submitted
+          schema:
+            type: object
+            properties:
+              feedback_id:
+                type: string
+                format: uuid
+              status:
+                type: string
+                default: submitted
+              created_at:
+                type: string
+                format: datetime
+        400:
+          description: Invalid request
+          schema:
+            $ref: '#/schemas/Error'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/schemas/Error'
+
+schemas:
+  Error:
+    type: object
+    properties:
+      error:
+        type: string
+        description: Error type or code
+      message:
+        type: string
+        description: Human-readable error message
+      details:
+        type: object
+        description: Additional error details
+      timestamp:
+        type: string
+        format: datetime
+
+  User:
+    type: object
+    properties:
+      user_id:
+        type: string
+        format: uuid
+      email:
+        type: string
+        format: email
+      full_name:
+        type: string
+      consent_tier:
+        type: string
+        enum: [passive, suggestive, active, autonomous]
+      created_at:
+        type: string
+        format: datetime
+      last_active:
+        type: string
+        format: datetime
+
+  UserProfile:
+    type: object
+    properties:
+      user_id:
+        type: string
+        format: uuid
+      email:
+        type: string
+        format: email
+      full_name:
+        type: string
+      timezone:
+        type: string
+      language:
+        type: string
+      consent_tier:
+        type: string
+        enum: [passive, suggestive, active, autonomous]
+      notification_preferences:
+        type: object
+        properties:
+          email_notifications:
+            type: boolean
+          push_notifications:
+            type: boolean
+          daily_summary:
+            type: boolean
+          goal_reminders:
+            type: boolean
+      created_at:
+        type: string
+        format: datetime
+      last_active:
+        type: string
+        format: datetime
+
+  Conversation:
+    type: object
+    properties:
+      conversation_id:
+        type: string
+        format: uuid
+      title:
+        type: string
+      message_count:
+        type: integer
+      last_message_at:
+        type: string
+        format: datetime
+      archived:
+        type: boolean
+      created_at:
+        type: string
+        format: datetime
+      updated_at:
+        type: string
+        format: datetime
+
+  ConversationDetail:
+    type: object
+    properties:
+      conversation_id:
+        type: string
+        format: uuid
+      title:
+        type: string
+      messages:
+        type: array
+        items:
+          $ref: '#/schemas/Message'
+      archived:
+        type: boolean
+      created_at:
+        type: string
+        format: datetime
+      updated_at:
+        type: string
+        format: datetime
+
+  Message:
+    type: object
+    properties:
+      message_id:
+        type: string
+        format: uuid
+      conversation_id:
+        type: string
+        format: uuid
+      role:
+        type: string
+        enum: [user, assistant, system]
+      content:
+        type: string
+      metadata:
+        type: object
+        properties:
+          agent_type:
+            type: string
+            description: Which agent generated this message (for assistant role)
+          ethical_check_passed:
+            type: boolean
+          reasoning_trace_id:
+            type: string
+            format: uuid
+      reactions:
+        type: array
+        items:
+          type: object
+          properties:
+            reaction_type:
+              type: string
+            created_at:
+              type: string
+              format: datetime
+      created_at:
+        type: string
+        format: datetime
+
+  EthicalValidation:
+    type: object
+    properties:
+      validation_id:
+        type: string
+        format: uuid
+      passed:
+        type: boolean
+        description: Whether content passed ethical validation
+      severity:
+        type: string
+        enum: [info, warning, concern, critical]
+      issues:
+        type: array
+        items:
+          type: object
+          properties:
+            issue_type:
+              type: string
+              description: e.g., privacy_concern, manipulation_risk, harm_potential
+            description:
+              type: string
+            severity:
+              type: string
+      modifications:
+        type: array
+        items:
+          type: string
+        description: List of modifications made to pass validation
+      reasoning:
+        type: string
+        description: Othello's reasoning for the validation decision
+      validated_at:
+        type: string
+        format: datetime
+
+  ConsentPrompt:
+    type: object
+    properties:
+      prompt_id:
+        type: string
+        format: uuid
+      action_type:
+        type: string
+        description: Type of action requiring consent (e.g., send_email, schedule_event)
+      action_description:
+        type: string
+        description: Human-readable description of proposed action
+      urgency:
+        type: string
+        enum: [low, medium, high]
+      status:
+        type: string
+        enum: [pending, approved, denied, expired]
+      expires_at:
+        type: string
+        format: datetime
+        description: When this prompt expires
+      created_at:
+        type: string
+        format: datetime
+
+  ConsentPromptDetail:
+    type: object
+    properties:
+      prompt_id:
+        type: string
+        format: uuid
+      action_type:
+        type: string
+      action_description:
+        type: string
+      action_details:
+        type: object
+        description: Full details of proposed action
+      rationale:
+        type: string
+        description: AI's reasoning for proposing this action
+      ethical_validation:
+        $ref: '#/schemas/EthicalValidation'
+      urgency:
+        type: string
+        enum: [low, medium, high]
+      status:
+        type: string
+        enum: [pending, approved, denied, expired]
+      alternatives:
+        type: array
+        items:
+          type: object
+          properties:
+            description:
+              type: string
+            action_details:
+              type: object
+        description: Alternative actions user could choose
+      expires_at:
+        type: string
+        format: datetime
+      created_at:
+        type: string
+        format: datetime
+
+  Action:
+    type: object
+    properties:
+      action_id:
+        type: string
+        format: uuid
+      action_type:
+        type: string
+      action_description:
+        type: string
+      status:
+        type: string
+        enum: [proposed, approved, denied, executed, failed]
+      proposed_at:
+        type: string
+        format: datetime
+      executed_at:
+        type: string
+        format: datetime
+      result_summary:
+        type: string
+
+  ActionDetail:
+    type: object
+    properties:
+      action_id:
+        type: string
+        format: uuid
+      action_type:
+        type: string
+      action_description:
+        type: string
+      action_details:
+        type: object
+        description: Full action parameters and context
+      status:
+        type: string
+        enum: [proposed, approved, denied, executed, failed]
+      consent_prompt_id:
+        type: string
+        format: uuid
+      ethical_validation:
+        $ref: '#/schemas/EthicalValidation'
+      execution_log:
+        type: array
+        items:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: datetime
+            event:
+              type: string
+            details:
+              type: object
+      result:
+        type: object
+        description: Full execution result
+      proposed_at:
+        type: string
+        format: datetime
+      executed_at:
+        type: string
+        format: datetime
+
+  DigitalShadow:
+    type: object
+    properties:
+      user_id:
+        type: string
+        format: uuid
+      summary:
+        type: string
+        description: AI-generated summary of user's digital shadow
+      personality_traits:
+        type: array
+        items:
+          $ref: '#/schemas/PersonalityTrait'
+      behavioral_patterns:
+        type: array
+        items:
+          $ref: '#/schemas/BehaviorPattern'
+      goals:
+        type: array
+        items:
+          $ref: '#/schemas/Goal'
+      mood_summary:
+        type: object
+        properties:
+          current_mood:
+            type: string
+          average_mood_7d:
+            type: number
+          average_mood_30d:
+            type: number
+          detected_trends:
+            type: array
+            items:
+              type: string
+      interests:
+        type: array
+        items:
+          type: string
+      values:
+        type: array
+        items:
+          type: string
+      last_updated:
+        type: string
+        format: datetime
+      confidence_score:
+        type: number
+        format: float
+        description: Overall confidence in model (0-1)
+
+  PersonalityTrait:
+    type: object
+    properties:
+      trait_id:
+        type: string
+        format: uuid
+      trait_name:
+        type: string
+        description: e.g., openness, conscientiousness, extraversion
+      trait_category:
+        type: string
+        description: Category of trait
+      score:
+        type: number
+        format: float
+        description: Trait score (normalized 0-1)
+      confidence:
+        type: number
+        format: float
+        description: Confidence in this trait assessment (0-1)
+      evidence:
+        type: array
+        items:
+          type: string
+        description: Behavioral evidence supporting this trait
+      first_detected:
+        type: string
+        format: datetime
+      last_updated:
+        type: string
+        format: datetime
+
+  BehaviorPattern:
+    type: object
+    properties:
+      pattern_id:
+        type: string
+        format: uuid
+      pattern_type:
+        type: string
+        description: e.g., routine, habit, tendency, response_pattern
+      description:
+        type: string
+        description: Human-readable pattern description
+      frequency:
+        type: string
+        enum: [rare, occasional, frequent, consistent]
+      strength:
+        type: number
+        format: float
+        description: Pattern strength (0-1)
+      triggers:
+        type: array
+        items:
+          type: string
+        description: Identified triggers for this pattern
+      contexts:
+        type: array
+        items:
+          type: string
+        description: Contexts where pattern occurs
+      first_detected:
+        type: string
+        format: datetime
+      last_observed:
+        type: string
+        format: datetime
+      observation_count:
+        type: integer
+
+  Goal:
+    type: object
+    properties:
+      goal_id:
+        type: string
+        format: uuid
+      title:
+        type: string
+      description:
+        type: string
+      goal_type:
+        type: string
+        enum: [habit, achievement, learning, health, relationship, career, financial]
+      status:
+        type: string
+        enum: [active, completed, paused, abandoned]
+      target_date:
+        type: string
+        format: date
+      progress_percentage:
+        type: number
+        format: float
+        description: Overall progress (0-100)
+      created_at:
+        type: string
+        format: datetime
+      updated_at:
+        type: string
+        format: datetime
+
+  GoalDetail:
+    type: object
+    properties:
+      goal_id:
+        type: string
+        format: uuid
+      title:
+        type: string
+      description:
+        type: string
+      goal_type:
+        type: string
+        enum: [habit, achievement, learning, health, relationship, career, financial]
+      status:
+        type: string
+        enum: [active, completed, paused, abandoned]
+      target_date:
+        type: string
+        format: date
+      metrics:
+        type: array
+        items:
+          type: object
+          properties:
+            metric_name:
+              type: string
+            current_value:
+              type: number
+            target_value:
+              type: number
+            unit:
+              type: string
+            progress_percentage:
+              type: number
+              format: float
+      progress_history:
+        type: array
+        items:
+          type: object
+          properties:
+            date:
+              type: string
+              format: date
+            metrics:
+              type: array
+              items:
+                type: object
+            notes:
+              type: string
+      ai_insights:
+        type: array
+        items:
+          type: string
+        description: AI-generated insights about goal progress
+      coaching_preferences:
+        type: object
+        properties:
+          frequency:
+            type: string
+          reminder_time:
+            type: string
+            format: time
+      created_at:
+        type: string
+        format: datetime
+      updated_at:
+        type: string
+        format: datetime
+
+  MoodEntry:
+    type: object
+    properties:
+      mood_id:
+        type: string
+        format: uuid
+      mood_level:
+        type: string
+        enum: [very_negative, negative, neutral, positive, very_positive]
+      mood_score:
+        type: number
+        format: float
+        description: Numeric mood score (-2 to +2)
+      mood_tags:
+        type: array
+        items:
+          type: string
+      notes:
+        type: string
+      activities:
+        type: array
+        items:
+          type: string
+      context:
+        type: object
+        description: Contextual information (time of day, location, etc.)
+      created_at:
+        type: string
+        format: datetime
+
+  ReasoningTrace:
+    type: object
+    properties:
+      trace_id:
+        type: string
+        format: uuid
+      agent_type:
+        type: string
+        description: Which agent produced this reasoning
+      conversation_id:
+        type: string
+        format: uuid
+      message_id:
+        type: string
+        format: uuid
+      reasoning_steps:
+        type: array
+        items:
+          type: object
+          properties:
+            step_number:
+              type: integer
+            description:
+              type: string
+            inputs:
+              type: object
+            outputs:
+              type: object
+            confidence:
+              type: number
+              format: float
+      final_decision:
+        type: string
+      confidence_score:
+        type: number
+        format: float
+      created_at:
+        type: string
+        format: datetime
+
+  EthicalValidationLog:
+    type: object
+    properties:
+      log_id:
+        type: string
+        format: uuid
+      validation_type:
+        type: string
+        enum: [input_filter, output_filter, action_validation]
+      content_summary:
+        type: string
+        description: Summary of content being validated
+      passed:
+        type: boolean
+      severity:
+        type: string
+        enum: [info, warning, concern, critical]
+      issues_detected:
+        type: array
+        items:
+          type: string
+      actions_taken:
+        type: array
+        items:
+          type: string
+        description: Actions taken (e.g., blocked, modified, flagged)
+      reasoning:
+        type: string
+        description: Othello's reasoning
+      created_at:
+        type: string
+        format: datetime
+
+  EthicalGuideline:
+    type: object
+    properties:
+      guideline_id:
+        type: string
+        format: uuid
+      category:
+        type: string
+        description: e.g., privacy, safety, manipulation, autonomy
+      title:
+        type: string
+      description:
+        type: string
+      rule_text:
+        type: string
+        description: Formal rule definition
+      severity:
+        type: string
+        enum: [advisory, warning, critical]
+      active:
+        type: boolean
+      created_at:
+        type: string
+        format: datetime
+
+  Notification:
+    type: object
+    properties:
+      notification_id:
+        type: string
+        format: uuid
+      notification_type:
+        type: string
+        enum: [consent_prompt, goal_reminder, system_update, achievement, ai_insight]
+      title:
+        type: string
+      message:
+        type: string
+      read:
+        type: boolean
+      action_url:
+        type: string
+        description: Optional URL to related resource
+      metadata:
+        type: object
+        description: Type-specific metadata
+      created_at:
+        type: string
+        format: datetime
+
+security:
+  bearer_auth:
+    type: http
+    scheme: bearer
+    bearer_format: JWT
+    description: |
+      JWT-based authentication. Include the access token in the Authorization header:
+      Authorization: Bearer <access_token>
+      
+      Tokens expire after 1 hour. Use the /auth/refresh endpoint to obtain a new token.
+
+rate_limiting:
+  default:
+    requests_per_minute: 60
+    requests_per_hour: 1000
+  message_send:
+    requests_per_minute: 10
+    requests_per_hour: 100
+    description: Rate limit for sending messages to prevent abuse
+  burst_limit: 10
+
+error_codes:
+  authentication:
+    - code: AUTH001
+      message: Invalid or expired token
+    - code: AUTH002
+      message: Insufficient permissions
+    - code: AUTH003
+      message: Account locked or suspended
+  validation:
+    - code: VAL001
+      message: Required field missing
+    - code: VAL002
+      message: Invalid field format
+    - code: VAL003
+      message: Field value out of range
+  resources:
+    - code: RES001
+      message: Resource not found
+    - code: RES002
+      message: Resource already exists
+    - code: RES003
+      message: Resource access denied
+  rate_limit:
+    - code: RATE001
+      message: Rate limit exceeded
+      retry_after: Specified in Retry-After header
+  system:
+    - code: SYS001
+      message: Internal server error
+    - code: SYS002
+      message: Service temporarily unavailable
+    - code: SYS003
+      message: Database connection error
