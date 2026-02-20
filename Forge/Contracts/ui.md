@@ -1,832 +1,603 @@
-# UI Contract: OthelloMini
-**Ethics-First Multi-Agent AI Life Intelligence Platform**
-
----
+# OthelloMini UI/UX Contract
 
 ## 1. App Shell & Layout
 
-### 1.1 Overall Structure
-The application follows a **chat-first, transparency-on-demand** architecture. The primary interface is a clean, full-screen conversational view with optional expandable panels for advanced transparency and control.
+### Overall Structure
+The application uses a **single-page chat-first layout** optimized for focus and minimal distraction. The interface is built as a React SPA with three primary layout zones:
 
-**Core Layout Pattern:**
-```
-┌─────────────────────────────────────────────────────────┐
-│  [Header Bar - Minimal]                        [☰ Menu] │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│                                                         │
-│          Chat Interface (Primary)                       │
-│          - User messages (right-aligned)                │
-│          - FELLO responses (left-aligned)               │
-│          - Inline consent cards                         │
-│          - Action suggestions                           │
-│                                                         │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  [Input Bar with Send]                                  │
-└─────────────────────────────────────────────────────────┘
-```
+**Main Chat Area (Primary Zone)**
+- Full-screen conversation interface occupying 100% viewport width on mobile, 70% on desktop
+- Fixed header bar (48px height) with app branding "Othello" and hamburger menu icon
+- Scrollable message list container (flex-grow: 1) with auto-scroll to latest message
+- Fixed bottom input bar (64px height) with text input field and send button
+- Dark navy background (#1a1f2e) with charcoal message bubbles (#2a2f3e)
 
-**With Transparency Panel (Optional):**
-```
-┌────────────────────────────┬────────────────────────────┐
-│                            │                            │
-│   Chat Interface           │   Transparency Panel       │
-│   (Primary - 65%)          │   (Collapsible - 35%)      │
-│                            │                            │
-│                            │   - Agent Reasoning        │
-│                            │   - Ethical Validation     │
-│                            │   - Digital Shadow Insight │
-│                            │                            │
-└────────────────────────────┴────────────────────────────┘
-```
+**Collapsible Side Panel (Transparency Zone)**
+- Desktop: 30% width panel, collapsed by default, slides in from right
+- Mobile: Full-screen overlay modal activated by header menu icon
+- Three collapsible accordion sections:
+  - **Profile Summary**: Top 3 psychological traits, current consent tier badge
+  - **Ethical Reasoning Log**: Recent Othello filtering decisions with timestamps
+  - **Conversation Context**: Last 5 message summaries for transparency
+- Soft charcoal background (#252a38) with subtle border separator
+- Close button (X icon) in top-right corner
 
-### 1.2 Navigation Structure
+**Settings Modal (Secondary Zone)**
+- Centered modal overlay (max-width 480px) with backdrop blur
+- Accessed via gear icon in header bar or "Settings" link in side panel
+- Contains consent tier controls and profile management options
+- Dismissible via backdrop click or close button
 
-**Primary Navigation (Hamburger Menu):**
-- **Chat** (Home/Default) — Main conversation interface
-- **Digital Shadow** — User psychological profile summary
-- **Consent Dashboard** — Autonomy tier controls and action history
-- **Settings** — Preferences, integrations, data controls
-- **Help & Safety** — Documentation, safety controls, data export
+### Navigation Pattern
+- **No traditional navigation menu** — single-view chat interface
+- Header hamburger toggles side panel (desktop) or full-screen menu (mobile)
+- All secondary actions (settings, profile view) are modal overlays
+- Back-to-chat always visible when modals/panels are open
 
-**Navigation Behavior:**
-- Hamburger menu slides in from left (mobile) or appears as overlay (desktop)
-- Navigation preserves chat context when switching views
-- Back button returns to chat from any secondary screen
-- Menu closes automatically on selection (mobile)
-
-### 1.3 Responsive Breakpoints
-- **Mobile (< 640px):** Single-column, full-screen chat, collapsible panels as modal overlays
-- **Tablet (640px - 1024px):** Chat + optional side panel (triggered by icon)
-- **Desktop (> 1024px):** Chat with persistent side panel option, wider input area
+### Responsive Breakpoints
+- Mobile: < 768px (single column, full-width chat, overlay panels)
+- Tablet: 768px - 1024px (chat 60%, collapsible sidebar 40%)
+- Desktop: > 1024px (chat 70%, collapsible sidebar 30%)
 
 ---
 
 ## 2. Screens/Views
 
-### 2.1 Chat Interface (Primary Screen)
+### 2.1 Chat View (Primary Screen)
 
-**Purpose:** Core conversational interaction with FELLO, including inline consent prompts and action suggestions.
+**Purpose**: Core conversational interface for all user interactions with Othello/FELLO AI.
 
-**Layout Elements:**
-- **Header Bar:**
-  - App logo/name (left)
-  - Current autonomy tier indicator (subtle badge)
-  - Transparency toggle button (eye icon)
-  - Menu button (hamburger icon)
+**Layout Elements**:
+- **Message List**:
+  - User messages: Right-aligned, soft teal bubble (#3a7a7c), white text
+  - AI messages: Left-aligned, charcoal bubble (#2a2f3e), high-contrast white text
+  - Timestamp below each message (small grey text, 12px)
+  - Avatar icons: User (simple circle initial), AI (Othello icon)
   
-- **Message Stream:**
-  - Scrollable chat history
-  - User messages: right-aligned, distinct background
-  - FELLO messages: left-aligned, conversational tone
-  - Inline consent cards embedded in conversation flow
-  - Action suggestion cards with approve/deny controls
-  - Timestamps (subtle, on-demand hover)
-  - Typing indicator during AI processing
-  
-- **Input Area:**
-  - Multi-line text input (auto-expanding up to 4 lines)
-  - Send button (paper plane icon)
-  - Voice input button (optional Phase 2)
-  - Attachment button (minimal, for future context sharing)
+- **Inline Suggestion Cards** (embedded in message flow):
+  - Rendered immediately after relevant AI message
+  - Card structure:
+    - Header: Action title + consent tier badge (pill shape, color-coded)
+    - Body: Brief description of suggested action (2-3 lines)
+    - Expandable "Why this?" link → reveals ethical reasoning paragraph
+    - Footer: Two buttons — "Approve" (teal), "Deny" (muted grey)
+  - Visual hierarchy: Subtle elevation (box-shadow), 8px border-radius
+  - State indicators: Approved (green checkmark + fade), Denied (red X + fade)
 
-**Key Interactions:**
-- Scroll to load history
-- Tap consent card actions (Approve/Deny/Adjust)
-- Long-press messages for context menu (copy, flag, request explanation)
-- Pull-to-refresh for new context awareness
+- **Input Bar**:
+  - Multi-line text input (auto-expand up to 4 lines, then scroll)
+  - Placeholder: "Talk to Othello..."
+  - Send button: Teal circle with arrow icon, disabled when input empty
+  - Character count (optional): Small grey text when approaching limit
 
-**Visual Treatment:**
-- Deep navy/charcoal background (#1A1F2E base)
-- User messages: subtle elevated background (#2A3140)
-- FELLO messages: slightly lighter background (#242938)
-- High-contrast white text (#FFFFFF) for readability
-- Soft teal (#4ECDC4) for consent prompts and affirmative actions
-- Soft amber (#F7B731) for warnings or tier escalations
+**Key Interactions**:
+- Type message → Enter/Send → message appears instantly (optimistic UI) → AI response streams in
+- Click "Why this?" on suggestion → ethical reasoning expands inline with slide-down animation
+- Approve suggestion → card updates with checkmark, fades to 50% opacity, confirmation toast appears
+- Deny suggestion → card updates with X icon, fades out after 1s
+- Scroll up to load conversation history (infinite scroll, 20 messages per page)
+
+**Empty State**:
+- First-time user sees welcome message from Othello with brief introduction
+- Suggested conversation starters displayed as clickable chips (3-4 examples)
 
 ---
 
-### 2.2 Digital Shadow Screen
+### 2.2 Profile Summary Panel (Side Panel Section)
 
-**Purpose:** Transparent view into the AI's understanding of the user's psychological profile, tracked traits, and behavioral patterns.
+**Purpose**: Provide transparency into user's digital shadow — what the AI knows and remembers.
 
-**Layout Elements:**
-- **Header:** "Your Digital Shadow" + last updated timestamp
-- **Profile Summary Card:**
-  - Key traits (top 5-7 identified characteristics)
-  - Confidence indicators (subtle progress bars)
-  - Dominant mood trends (last 7/30 days)
-  
-- **Sub-Agent Insights Sections:**
-  - **Trait Tracker:** Personality dimensions, communication style
-  - **Behavior Observer:** Routines, decision patterns, habits
-  - **Aspiration Mapper:** Goals, values, priorities
-  - **Mood Analyzer:** Emotional state trends, triggers
-  
-- **Data Controls:**
-  - "Request Explanation" button per insight
-  - "Correct This" option to flag inaccuracies
-  - "Privacy Settings" link to control what's tracked
+**Content Blocks**:
+1. **Current Consent Tier**:
+   - Large badge with tier name (Passive/Suggestive/Active/Autonomous)
+   - Color-coded: Passive (grey), Suggestive (teal), Active (amber), Autonomous (red)
+   - One-line description of tier permissions
+   - "Change Tier" link → opens Settings modal
 
-**Key Interactions:**
-- Expand/collapse sections for detail
-- Tap insight cards for deeper reasoning
-- Edit or flag incorrect observations
-- View historical changes (timeline mode)
+2. **Top Psychological Traits** (3-5 items):
+   - List format with trait name + confidence indicator (filled circles, 1-5)
+   - Example: "Goal-oriented ●●●●○" 
+   - Trait icons (optional): Small iconography for visual scanning
+   - Last updated timestamp at bottom
 
-**Visual Treatment:**
-- Organized card layout with clear hierarchy
-- Soft shadows for depth without clutter
-- Iconography for each sub-agent (consistent with brand)
-- Data visualization: simple bar charts, trend lines (minimal, not dashboard-heavy)
+3. **Behavioral Patterns** (2-3 items):
+   - Brief bullet list of observed preferences
+   - Example: "Prefers morning planning sessions"
+   - Derived from conversation history (simplified for MVP)
+
+**Interactions**:
+- Expand/collapse each section with accordion animation
+- Hover on trait → tooltip shows brief explanation
+- "View Full Profile" link at bottom → future feature placeholder (disabled in MVP)
 
 ---
 
-### 2.3 Consent Dashboard
+### 2.3 Ethical Reasoning Log (Side Panel Section)
 
-**Purpose:** Central control for autonomy tiers, action approval history, and ethical boundary management.
+**Purpose**: Show Othello's filtering decisions for transparency and trust-building.
 
-**Layout Elements:**
-- **Header:** "Consent & Autonomy"
-- **Current Tier Selector:**
-  - Four-tier radio/segmented control:
-    - **Passive** (only responds when asked)
-    - **Suggestive** (offers ideas, waits for approval)
-    - **Active** (can nudge and remind with consent)
-    - **Autonomous** (executes approved patterns without asking)
-  - Description of each tier below selector
-  
-- **Pending Actions Card:**
-  - List of actions awaiting user approval
-  - Quick approve/deny controls
-  - Countdown timers for time-sensitive suggestions
-  
-- **Action History:**
-  - Scrollable list of past suggestions and approvals
-  - Filters: All / Approved / Denied / Auto-executed
-  - Timestamps and action outcomes
-  
-- **Ethical Override Settings:**
-  - Toggle switches for specific boundaries (e.g., "Never schedule before 8 AM", "Always ask before social interventions")
-  - Link to detailed safety settings
+**Layout**:
+- Reverse chronological list (most recent first)
+- Each entry contains:
+  - Timestamp (relative: "2 min ago", "1 hour ago")
+  - Suggested action title (truncated to 40 chars)
+  - Othello's decision: "Approved for [tier]" or "Blocked" with reason
+  - Expandable details: Full ethical reasoning text (2-4 sentences)
 
-**Key Interactions:**
-- Slide to change autonomy tier (with confirmation prompt)
-- Swipe actions to approve/deny
-- Tap history items for full context
-- Toggle override switches with immediate feedback
+**Visual Design**:
+- Compact card format (8px padding, subtle border)
+- Approved entries: Teal left border accent
+- Blocked entries: Amber left border accent
+- Max 10 entries visible, "Load More" button at bottom
 
-**Visual Treatment:**
-- Clear tier visualization (color-coded: green → yellow → amber → orange)
-- Pending actions highlighted with soft pulsing border
-- History items in chronological reverse order with distinct approved/denied states
-- Large, touch-friendly controls
+**Interactions**:
+- Click entry to expand full reasoning
+- Click suggestion title → scrolls to corresponding suggestion card in chat (if visible)
 
 ---
 
-### 2.4 Settings Screen
+### 2.4 Settings Modal
 
-**Purpose:** Configure app preferences, integrations, data management, and account settings.
+**Purpose**: User control center for consent tier and profile management.
 
-**Layout Elements:**
-- **Header:** "Settings"
-- **Sections (Expandable Accordion):**
-  - **Profile:** Name, avatar, contact preferences
-  - **Integrations:** Calendar, email, wellness apps (Phase 2)
-  - **Notifications:** Push, email, consent prompt alerts
-  - **Privacy & Data:** Export data, delete account, tracking preferences
-  - **Appearance:** Dark/light mode (default dark), font size
-  - **About:** Version, terms, privacy policy, feedback
+**Sections**:
 
-**Key Interactions:**
-- Tap sections to expand
-- Toggle switches for binary options
-- Navigation to sub-screens for complex settings
-- "Export My Data" triggers download
-- "Delete Account" requires confirmation flow
+1. **Consent Tier Selection** (top priority):
+   - Header: "Set Your Autonomy Level"
+   - Four large radio buttons (vertical stack on mobile, 2x2 grid on desktop):
+     - **Passive**: "Observe only. Othello learns but never suggests actions."
+     - **Suggestive**: "Gentle nudges. Othello suggests, you always decide."
+     - **Active**: "Proactive help. Othello plans actions, you approve each one."
+     - **Autonomous**: "Trusted autopilot. Pre-approved actions execute automatically." (amber warning icon)
+   - Each option shows badge color and icon
+   - Currently selected tier has teal border highlight
+   - "Save Changes" button at bottom (primary teal button)
 
-**Visual Treatment:**
-- Clean list layout with clear grouping
-- Icons for each section
-- Toggle switches and chevrons for navigation
-- Destructive actions (delete) in red accent
+2. **Profile Management**:
+   - "View Collected Data" button → expands JSON-like tree view of user profile (read-only)
+   - "Clear Conversation History" button (destructive action, requires confirmation)
+   - "Reset Profile" button (red, requires typed confirmation: "RESET")
+
+3. **About**:
+   - App version number
+   - Link to "How Othello Works" (external docs)
+   - Privacy statement snippet
+
+**Interactions**:
+- Change consent tier → immediate save on selection (no separate save button needed)
+- Click destructive action → confirmation dialog slides down inline
+- Close modal via X button, backdrop click, or ESC key
 
 ---
 
-### 2.5 Onboarding Flow (First-Time User)
+### 2.5 Conversation Context (Side Panel Section)
 
-**Purpose:** Welcome new users, establish initial consent tier, and gather baseline context for personalization.
+**Purpose**: Show recent conversation summary for context awareness.
 
-**Screens:**
-1. **Welcome Screen:**
-   - Othello/FELLO branding
-   - Tagline: "Your ethics-first AI life companion"
-   - "Get Started" button
-   
-2. **Consent Introduction:**
-   - Explanation of four-tier autonomy model
-   - Visual diagram of tiers
-   - "I understand" confirmation
-   
-3. **Initial Tier Selection:**
-   - Choose starting tier (default: Suggestive)
-   - Brief description of what to expect
-   - "Continue" button
-   
-4. **Optional Context Gathering:**
-   - "Tell me about yourself" open-ended input
-   - Skip option clearly visible
-   - "This helps me understand you better" explanation
-   
-5. **Ready Screen:**
-   - "Your AI is ready"
-   - "Start Chatting" button → Main Chat Interface
+**Content**:
+- Last 5 conversation turns displayed as compact list:
+  - User message preview (1 line, truncated)
+  - AI response preview (1 line, truncated)
+  - Timestamp (relative)
+- "View Full History" link → scrolls chat view to top
 
-**Key Interactions:**
-- Swipe or tap "Next" to progress
-- Back button to review previous steps
-- Skip option for optional screens
-- Progress indicator at top (5 dots/steps)
-
-**Visual Treatment:**
-- Large, friendly illustrations
-- Generous whitespace
-- Clear primary CTA buttons
-- Warm, welcoming tone in copy
+**Design**:
+- Minimal design: Small text (14px), grey on charcoal
+- Hover effect: Slight brightness increase
+- Click message → scrolls to that message in chat view
 
 ---
 
 ## 3. Component List
 
-### 3.1 Core Reusable Components
+### Core Components
 
-**MessageBubble**
-- **Purpose:** Display chat messages from user or FELLO
-- **Props:** `message` (text), `sender` (user/ai), `timestamp`, `status` (sending/sent/error)
-- **Variants:** User (right-aligned, teal accent), FELLO (left-aligned, neutral)
-- **States:** Default, sending (animated), error (red border)
+1. **ChatView**
+   - Container component managing chat state
+   - Props: `messages`, `onSendMessage`, `isLoading`
+   - Children: MessageList, InputBar
 
-**ConsentCard**
-- **Purpose:** Inline consent prompt for actions requiring approval
-- **Props:** `action` (description), `tier` (which tier triggered it), `onApprove`, `onDeny`, `onAdjust`
-- **Layout:** Card with action description, tier badge, three-button row (Approve/Deny/Adjust)
-- **Variants:** Standard, Urgent (amber border), Autonomous preview (green border)
-- **States:** Pending, Approved (collapsed with checkmark), Denied (collapsed with X), Expired
+2. **MessageList**
+   - Scrollable container for messages and suggestion cards
+   - Props: `messages`, `suggestions`, `onApprove`, `onDeny`
+   - Auto-scroll behavior on new message
 
-**ActionSuggestionCard**
-- **Purpose:** Proactive suggestion from RealityAgent
-- **Props:** `suggestion` (text), `reasoning` (why), `impact` (expected outcome), `onAccept`, `onDismiss`, `onLearnMore`
-- **Layout:** Card with suggestion headline, brief reasoning, "Why this?" expandable, action buttons
-- **Variants:** Goal-related (teal accent), Routine (neutral), Mood intervention (amber accent)
-- **States:** Active, Accepted (success feedback), Dismissed (fade out), Expanded (showing full reasoning)
+3. **MessageBubble**
+   - Single message display (user or AI)
+   - Props: `content`, `sender`, `timestamp`, `avatar`
+   - Variants: `user`, `ai`
 
-**InsightCard**
-- **Purpose:** Display Digital Shadow insights (traits, behaviors, aspirations)
-- **Props:** `title`, `content`, `confidence` (0-1), `subAgent` (which agent detected), `onExplain`, `onFlag`
-- **Layout:** Card with icon, title, content text, confidence bar, action links
-- **Variants:** Trait, Behavior, Aspiration, Mood
-- **States:** Default, Expanded (full detail), Flagged (sent for review)
+4. **SuggestionCard**
+   - Inline action suggestion with consent controls
+   - Props: `title`, `description`, `consentTier`, `ethicalReasoning`, `status`, `onApprove`, `onDeny`
+   - States: `pending`, `approved`, `denied`
+   - Expandable reasoning section
 
-**TierSelector**
-- **Purpose:** Choose autonomy tier
-- **Props:** `currentTier`, `onChange`, `showDescriptions` (bool)
-- **Layout:** Segmented control or vertical radio list with descriptions
-- **Variants:** Compact (segmented), Detailed (radio + descriptions)
-- **States:** Passive, Suggestive, Active, Autonomous (each selectable)
+5. **InputBar**
+   - Text input with send button
+   - Props: `value`, `onChange`, `onSubmit`, `disabled`, `placeholder`
+   - Auto-expand textarea (1-4 lines)
 
-**Button**
-- **Purpose:** Primary interactive element
-- **Props:** `label`, `variant`, `size`, `disabled`, `loading`, `onClick`
-- **Variants:** Primary (teal), Secondary (outlined), Destructive (red), Ghost (text only)
-- **Sizes:** Small, Medium, Large
-- **States:** Default, Hover, Active, Disabled, Loading (spinner)
+6. **SidePanel**
+   - Collapsible side panel container
+   - Props: `isOpen`, `onClose`, `sections`
+   - Responsive: Sidebar (desktop) vs full-screen overlay (mobile)
 
-**IconButton**
-- **Purpose:** Icon-only actions (menu, send, toggle)
-- **Props:** `icon`, `label` (accessibility), `onClick`, `active`
-- **Variants:** Default, Active (highlighted)
-- **States:** Default, Hover, Active, Disabled
+7. **ProfileSummary**
+   - User profile display component
+   - Props: `consentTier`, `traits`, `patterns`
+   - Includes consent tier badge and trait list
 
-**ToggleSwitch**
-- **Purpose:** Binary setting controls
-- **Props:** `checked`, `onChange`, `label`, `disabled`
-- **Variants:** Default (teal when on), Destructive (red when on, for dangerous settings)
-- **States:** Off, On, Disabled
+8. **EthicalReasoningLog**
+   - List of Othello filtering decisions
+   - Props: `entries`, `onLoadMore`
+   - Expandable entry cards
 
-**ProgressBar**
-- **Purpose:** Show confidence levels, loading states
-- **Props:** `value` (0-1), `color`, `label`
-- **Variants:** Linear, Circular (for mini indicators)
-- **States:** Determinate, Indeterminate (animated)
+9. **ConversationContext**
+   - Recent message summary list
+   - Props: `recentMessages`, `onMessageClick`
 
-**Modal**
-- **Purpose:** Overlay dialogs for confirmations, details, settings
-- **Props:** `title`, `content`, `actions` (button array), `onClose`
-- **Variants:** Standard, Full-screen (mobile), Drawer (slide-in panel)
-- **States:** Open, Closed, Animating
+10. **SettingsModal**
+    - Modal overlay for settings
+    - Props: `isOpen`, `onClose`, `currentTier`, `onTierChange`
+    - Sections: ConsentTierSelector, ProfileManagement
 
-**TabBar** (Mobile Navigation)
-- **Purpose:** Bottom navigation for primary sections (mobile only)
-- **Props:** `tabs` (array of {label, icon, route}), `activeTab`
-- **Layout:** Fixed bottom bar, 3-4 tabs with icons and labels
-- **Variants:** Compact (icons only), Labeled (icon + text)
-- **States:** Active tab highlighted
+11. **ConsentTierSelector**
+    - Radio button group for tier selection
+    - Props: `selectedTier`, `onChange`
+    - Four tier options with descriptions
 
-**LoadingSpinner**
-- **Purpose:** Indicate processing/loading
-- **Props:** `size`, `color`
-- **Variants:** Small (inline), Medium (default), Large (full-screen overlay)
-- **States:** Spinning animation
+12. **ConsentBadge**
+    - Small pill-shaped tier indicator
+    - Props: `tier` (Passive/Suggestive/Active/Autonomous)
+    - Color-coded styling
 
-**TransparencyPanel**
-- **Purpose:** Collapsible side panel for agent reasoning and ethical validation
-- **Props:** `currentMessage`, `agentTrace`, `ethicalChecks`, `onClose`
-- **Layout:** Vertical panel with sections: Reasoning, Validation, Digital Shadow Context
-- **Variants:** Collapsed (icon only), Expanded (full panel)
-- **States:** Hidden, Visible, Pinned
+13. **ConfirmationDialog**
+    - Inline confirmation for destructive actions
+    - Props: `message`, `confirmText`, `onConfirm`, `onCancel`, `requireTypedConfirmation`
 
----
+14. **HeaderBar**
+    - Top navigation with branding and menu
+    - Props: `onMenuToggle`, `onSettingsClick`
+    - Fixed position
 
-### 3.2 Specialized Components
+15. **LoadingSpinner**
+    - AI response loading indicator
+    - Displayed in message list while waiting for response
 
-**AutonomyTierBadge**
-- **Purpose:** Visual indicator of current autonomy tier
-- **Props:** `tier`
-- **Variants:** Passive (gray), Suggestive (blue), Active (teal), Autonomous (amber)
-- **States:** Static display
+### Utility Components
 
-**EthicalValidationIndicator**
-- **Purpose:** Show ethical check status on messages/actions
-- **Props:** `status` (passed/flagged/overridden)
-- **Variants:** Passed (green checkmark), Flagged (amber warning), Overridden (red shield)
-- **States:** Default, Hover (shows detail tooltip)
+16. **Icon**
+    - Reusable icon component
+    - Props: `name`, `size`, `color`
+    - Library: Lucide React or similar
 
-**TypingIndicator**
-- **Purpose:** Show FELLO is composing response
-- **Layout:** Three animated dots
-- **Variants:** Default (subtle animation)
-- **States:** Animating
+17. **Button**
+    - Styled button with variants
+    - Props: `variant` (primary/secondary/destructive), `size`, `disabled`, `onClick`
 
-**MessageContextMenu**
-- **Purpose:** Long-press/right-click actions on messages
-- **Props:** `message`, `onCopy`, `onFlag`, `onExplain`, `onDelete`
-- **Layout:** Floating menu with action list
-- **Variants:** User message actions, FELLO message actions
-- **States:** Open, Closed
+18. **Card**
+    - Generic card container
+    - Props: `elevation`, `padding`, `borderRadius`
 
-**TimelineView**
-- **Purpose:** Show historical changes in Digital Shadow
-- **Props:** `events` (array of timestamped insights)
-- **Layout:** Vertical timeline with nodes for events
-- **Variants:** Compact, Detailed
-- **States:** Default, Filtered
+19. **Accordion**
+    - Collapsible section container
+    - Props: `title`, `isOpen`, `onToggle`, `children`
+
+20. **Toast**
+    - Temporary notification overlay
+    - Props: `message`, `type` (success/error/info), `duration`
+    - Auto-dismiss after timeout
 
 ---
 
 ## 4. Visual Style
 
-### 4.1 Color Palette
+### Color Palette
 
-**Base Colors:**
-- **Primary Background:** `#1A1F2E` (Deep navy/charcoal)
-- **Secondary Background:** `#242938` (Slightly lighter for cards)
-- **Elevated Background:** `#2A3140` (User messages, raised elements)
-- **Surface:** `#343B4F` (Modals, overlays)
+**Base Colors**:
+- **Primary Background**: Deep Navy `#1a1f2e` — main app background
+- **Secondary Background**: Charcoal `#2a2f3e` — message bubbles, cards
+- **Tertiary Background**: Soft Charcoal `#252a38` — side panel, elevated surfaces
 
-**Accent Colors:**
-- **Primary Accent (Teal):** `#4ECDC4` (Consent prompts, affirmative actions, links)
-- **Secondary Accent (Amber):** `#F7B731` (Warnings, tier escalations, urgent actions)
-- **Success:** `#6BCF7F` (Approved actions, positive feedback)
-- **Error/Destructive:** `#E74C3C` (Errors, denials, delete actions)
+**Accent Colors**:
+- **Primary Accent**: Soft Teal `#3a7a7c` — CTAs, user messages, approve actions
+- **Warning Accent**: Muted Amber `#d4a05f` — warnings, Active tier, blocked suggestions
+- **Danger Accent**: Soft Red `#c05555` — Autonomous tier, destructive actions
+- **Success Accent**: Muted Green `#5a9f7c` — approved confirmations
 
-**Text Colors:**
-- **Primary Text:** `#FFFFFF` (High contrast, main content)
-- **Secondary Text:** `#B4B9C8` (Labels, metadata, timestamps)
-- **Disabled Text:** `#6B7280` (Disabled controls, inactive elements)
+**Text Colors**:
+- **Primary Text**: High-contrast White `#f5f5f5` — main content
+- **Secondary Text**: Light Grey `#b0b5c0` — timestamps, descriptions
+- **Muted Text**: Medium Grey `#6b7280` — placeholders, disabled states
 
-**Tier-Specific Colors:**
-- **Passive:** `#6B7280` (Gray)
-- **Suggestive:** `#3B82F6` (Blue)
-- **Active:** `#4ECDC4` (Teal)
-- **Autonomous:** `#F7B731` (Amber)
+**Consent Tier Color-Coding**:
+- Passive: Light Grey `#6b7280`
+- Suggestive: Soft Teal `#3a7a7c`
+- Active: Muted Amber `#d4a05f`
+- Autonomous: Soft Red `#c05555`
 
-### 4.2 Typography
+### Typography
 
-**Font Family:**
-- **Primary:** `Inter` (system fallback: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`)
-- **Monospace (for technical details):** `JetBrains Mono` (fallback: `"Courier New", monospace`)
+**Font Family**:
+- **Primary**: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
+- Fallback to system fonts for performance
+- Clean, highly legible sans-serif for conversational UI
 
-**Type Scale:**
-- **H1 (Page Titles):** 32px / 2rem, weight 700, line-height 1.2
-- **H2 (Section Titles):** 24px / 1.5rem, weight 600, line-height 1.3
-- **H3 (Card Titles):** 18px / 1.125rem, weight 600, line-height 1.4
-- **Body (Default):** 16px / 1rem, weight 400, line-height 1.6
-- **Body Small:** 14px / 0.875rem, weight 400, line-height 1.5
-- **Caption:** 12px / 0.75rem, weight 400, line-height 1.4
-- **Button Text:** 16px / 1rem, weight 500, line-height 1.2
+**Type Scale**:
+- **H1 (Headings)**: 24px, 600 weight, 1.3 line-height — modal titles
+- **H2 (Subheadings)**: 18px, 600 weight, 1.4 line-height — section headers
+- **Body (Default)**: 16px, 400 weight, 1.6 line-height — messages, descriptions
+- **Small (Metadata)**: 14px, 400 weight, 1.5 line-height — timestamps, labels
+- **Tiny (Captions)**: 12px, 400 weight, 1.4 line-height — hints, footnotes
 
-**Text Rendering:**
-- Anti-aliasing: enabled for smooth rendering
-- Letter-spacing: Default for body, -0.02em for headings
-- Text color contrast ratio: minimum 4.5:1 for accessibility
+**Text Styling**:
+- Message content: Body size with comfortable line-height for readability
+- Timestamps: Small size, secondary text color
+- Button text: 15px, 500 weight, uppercase for primary CTAs, title-case for secondary
+- Links: Underline on hover, teal color
 
-### 4.3 Spacing & Layout
+### Spacing & Layout
 
-**Spacing Scale (8px base unit):**
-- **xs:** 4px (0.25rem)
-- **sm:** 8px (0.5rem)
-- **md:** 16px (1rem)
-- **lg:** 24px (1.5rem)
-- **xl:** 32px (2rem)
-- **2xl:** 48px (3rem)
+**Base Unit**: 8px grid system
 
-**Component Spacing:**
-- Message bubbles: 12px vertical margin between messages
-- Card padding: 16px (mobile), 24px (desktop)
-- Input padding: 12px vertical, 16px horizontal
-- Section margins: 24px between major sections
+**Spacing Scale**:
+- xs: 4px — tight spacing (icon margins)
+- sm: 8px — compact spacing (card padding)
+- md: 16px — default spacing (component margins)
+- lg: 24px — generous spacing (section separation)
+- xl: 32px — large spacing (modal padding)
+- 2xl: 48px — extra-large spacing (view separation)
 
-**Border Radius:**
-- **Small (buttons, badges):** 6px
-- **Medium (cards, inputs):** 12px
-- **Large (modals):** 16px
-- **Message bubbles:** 16px (with tail optional)
+**Component Spacing**:
+- Message bubbles: 12px vertical gap between messages
+- Suggestion cards: 16px margin-top from message, 8px padding
+- Side panel sections: 24px vertical gap
+- Input bar: 16px padding
 
-**Shadows:**
-- **Subtle (cards):** `0 2px 8px rgba(0, 0, 0, 0.12)`
-- **Medium (modals):** `0 4px 16px rgba(0, 0, 0, 0.24)`
-- **Strong (menus):** `0 8px 24px rgba(0, 0, 0, 0.36)`
+### Elevation & Shadows
 
-### 4.4 Iconography
+**Shadow Levels**:
+- **Level 1** (Subtle): `0 1px 3px rgba(0, 0, 0, 0.3)` — message bubbles
+- **Level 2** (Moderate): `0 4px 12px rgba(0, 0, 0, 0.4)` — suggestion cards, modals
+- **Level 3** (Strong): `0 8px 24px rgba(0, 0, 0, 0.5)` — floating panels, overlays
 
-**Icon System:** Lucide Icons (or Heroicons as fallback)
-- **Style:** Outlined/stroke-based for consistency
-- **Size:** 20px default, 16px small, 24px large
-- **Color:** Inherits from parent text color
-- **Stroke width:** 2px
+**Border Radius**:
+- Small: 4px — badges, small chips
+- Medium: 8px — buttons, message bubbles
+- Large: 12px — cards, panels
+- Extra-large: 16px — modals
 
-**Key Icons:**
-- **Menu:** Hamburger (three horizontal lines)
-- **Send:** Paper plane
-- **Approve:** Checkmark in circle
-- **Deny:** X in circle
-- **Adjust:** Sliders
-- **Transparency:** Eye
-- **Settings:** Gear
-- **Profile:** User circle
-- **Shield:** Ethical validation
-- **Brain:** Digital shadow/agent
-- **Calendar:** Scheduling actions
-- **Goal:** Target/flag
+### Interactive States
 
-### 4.5 Animation & Transitions
+**Button States**:
+- Default: Solid color with subtle shadow
+- Hover: 10% brightness increase, slight shadow expansion
+- Active/Pressed: 10% brightness decrease, shadow reduction
+- Disabled: 40% opacity, no hover effects
 
-**Duration Standards:**
-- **Fast (micro-interactions):** 150ms (button hover, toggle)
-- **Medium (component transitions):** 250ms (modal open, panel slide)
-- **Slow (page transitions):** 400ms (navigation, screen change)
+**Card/Message Hover**:
+- Subtle brightness increase (5%)
+- Cursor change to pointer for interactive elements
+- Smooth transition (150ms ease-in-out)
 
-**Easing Functions:**
-- **Standard:** `cubic-bezier(0.4, 0.0, 0.2, 1)` (ease-in-out)
-- **Enter:** `cubic-bezier(0.0, 0.0, 0.2, 1)` (deceleration)
-- **Exit:** `cubic-bezier(0.4, 0.0, 1, 1)` (acceleration)
+**Focus Indicators**:
+- Keyboard navigation: 2px teal outline with 2px offset
+- Input fields: Teal border highlight on focus
+- Ensure WCAG 2.1 AA contrast ratios (4.5:1 minimum)
 
-**Key Animations:**
-- **Message appear:** Fade + slide up (250ms)
-- **Consent card enter:** Scale from 0.95 to 1.0 + fade (300ms)
-- **Typing indicator:** Bounce animation on dots (1200ms loop)
-- **Button press:** Scale to 0.98 (100ms)
-- **Panel slide:** Slide from right/left + fade (300ms)
-- **Success feedback:** Checkmark draw animation (400ms)
+### Iconography
 
-**Loading States:**
-- Skeleton screens for initial loads (pulsing gradient)
-- Spinner for in-progress actions (rotating circle)
-- Progress bars for determinate processes
+**Icon Library**: Lucide React (or Heroicons as alternative)
+
+**Icon Usage**:
+- Header menu: Hamburger icon (24px)
+- Settings: Gear icon (20px)
+- Close: X icon (20px)
+- Send: Arrow-right icon (20px)
+- Approve: Check icon (18px, teal)
+- Deny: X icon (18px, grey)
+- Expand: Chevron-down (16px)
+- Collapse: Chevron-up (16px)
+- Tier badges: Shield icons with fill color
+- Loading: Spinner animation (24px)
+
+**Icon Styling**:
+- Stroke width: 2px (medium weight)
+- Color: Match text color or accent color contextually
+- Padding: 4px minimum touch target expansion
+
+### Animation & Transitions
+
+**Timing**:
+- Fast: 150ms — hover effects, button states
+- Medium: 250ms — panel slides, accordion expand/collapse
+- Slow: 400ms — modal fade-in/out, page transitions
+
+**Easing Functions**:
+- Ease-in-out: Default for most transitions (smooth start and end)
+- Ease-out: Element entering viewport (faster start)
+- Ease-in: Element exiting viewport (faster end)
+
+**Key Animations**:
+- Message appear: Fade-in + slide-up (250ms ease-out)
+- Suggestion card reveal: Scale-in from 0.95 to 1.0 + fade (300ms ease-out)
+- Side panel open: Slide-in from right (300ms ease-in-out)
+- Toast notification: Slide-down from top + fade (250ms ease-out), auto-dismiss after 3s
+- Loading indicator: Continuous spin animation (1s linear infinite)
 
 ---
 
 ## 5. Key User Flows
 
-### 5.1 First Conversation & Consent Approval
+### Flow 1: First Conversation with AI Suggestion
 
-**User Goal:** Start using OthelloMini, experience consent-gated AI interaction
+**Goal**: User sends first message, receives AI response with consent-gated suggestion, and approves it.
 
-**Flow:**
-1. **Entry:** User completes onboarding, lands on Chat Interface
-2. **Initial Prompt:** FELLO sends welcome message: "Hi! I'm FELLO. How can I support you today?"
-3. **User Input:** User types: "Help me plan my week"
-4. **Processing:** Typing indicator appears (2-3 seconds)
-5. **FELLO Response:** "I can help with that. To create a meaningful plan, I'd like to understand your priorities this week. What are your top 3 goals?"
-6. **User Response:** User lists goals (e.g., "Finish project, exercise 3x, spend time with family")
-7. **Processing:** Typing indicator (3-4 seconds, sub-agents analyzing)
-8. **Consent Card Appears:** 
-   - **Title:** "Suggested Action: Create Weekly Schedule"
-   - **Description:** "I'd like to block time in your calendar for each goal. This requires calendar access."
-   - **Tier Badge:** "Suggestive"
-   - **Buttons:** [Approve] [Deny] [Adjust]
-9. **User Decision:**
-   - **If Approve:** Card collapses with success animation, FELLO proceeds to create schedule
-   - **If Deny:** Card collapses, FELLO acknowledges and offers alternative
-   - **If Adjust:** Modal opens with detailed settings (which goals to schedule, when to avoid, etc.)
-10. **Outcome:** FELLO confirms action taken or pivots based on user choice
-11. **Follow-up:** FELLO asks if user wants to see the schedule or discuss next steps
+**Steps**:
+1. **Landing** → User opens app, sees empty chat with welcome message from Othello
+   - Welcome text: "Hi! I'm Othello, your ethics-first AI companion. Tell me what's on your mind."
+   - Suggested starters displayed as chips: "Help me plan my day", "I need advice", "Tell me about yourself"
 
-**Touchpoints:**
-- Chat input/output
-- ConsentCard component
-- Typing indicator
-- Success/denial feedback
-- Optional transparency panel (if user toggles eye icon to see reasoning)
+2. **User Input** → User types message: "I want to start exercising more"
+   - Input field expands as user types
+   - Send button activates (teal highlight)
+   - User clicks Send or presses Enter
 
----
+3. **Message Sent** → User message appears in chat (right-aligned teal bubble)
+   - Optimistic UI: Message appears immediately
+   - Loading indicator (three dots) appears below for AI response
 
-### 5.2 Reviewing and Adjusting Digital Shadow
+4. **AI Response** → AI message streams in (left-aligned charcoal bubble)
+   - Text: "That's a great goal! Building an exercise habit can boost both physical and mental health. Based on your schedule, I can help you plan specific workout times."
+   - Message appears word-by-word (streaming effect) or all at once
 
-**User Goal:** Understand what FELLO has learned about them, correct inaccuracies
+5. **Suggestion Appears** → Suggestion card renders below AI message
+   - Card displays:
+     - Title: "Schedule morning workouts"
+     - Consent tier badge: "Suggestive" (teal)
+     - Description: "Add 30-minute workout slots to your calendar on Mon/Wed/Fri at 7 AM"
+     - Collapsed "Why this?" link
+     - Approve and Deny buttons
 
-**Flow:**
-1. **Entry:** User navigates to Digital Shadow screen via hamburger menu
-2. **Screen Loads:** Profile summary appears with key traits, loading animation completes
-3. **User Scans:** User reads top traits: "Goal-oriented, prefers morning productivity, values family time"
-4. **User Spots Inaccuracy:** One trait says "Prefers evening exercise" but user actually prefers morning
-5. **User Taps:** Taps the incorrect trait card
-6. **Detail Modal Opens:** Shows full reasoning: "Detected from conversation on [date] when you mentioned evening jog"
-7. **User Action:** Taps "Correct This" button at bottom of modal
-8. **Correction Interface:** Modal transitions to correction form:
-   - **Question:** "What should this say instead?"
-   - **Input:** Free-text field pre-filled with current trait
-   - **User Edits:** Changes to "Prefers morning exercise"
-   - **Optional Context:** "Why this correction?" field (user adds: "I only jog evenings when mornings are unavailable")
-9. **User Confirms:** Taps "Submit Correction"
-10. **Feedback:** Success message appears, modal closes, trait card updates in real-time
-11. **Digital Shadow Updates:** Trait card now shows corrected information with "User-verified" badge
-12. **Optional Next Step:** FELLO sends chat message acknowledging correction: "Thanks for that update! I've adjusted my understanding of your exercise preferences."
+6. **User Explores Reasoning** → User clicks "Why this?" link
+   - Ethical reasoning expands with slide-down animation:
+     - "This suggestion aligns with your stated goal and respects your autonomy. Morning timing based on your typical schedule patterns. Requires your explicit approval before any action."
+   - User reads reasoning
 
-**Touchpoints:**
-- Hamburger menu navigation
-- Digital Shadow screen with InsightCard components
-- Detail modal
-- Correction form/modal
-- Real-time update feedback
-- Cross-screen context (chat notification)
+7. **User Approves** → User clicks "Approve" button
+   - Button shows loading spinner briefly
+   - Card updates: Checkmark appears, card fades to 50% opacity
+   - Success toast appears at top: "Action approved! I'll help you get started."
+   - AI sends follow-up message: "Great! Let's set up those workout times..."
+
+**Alternative Path**: User clicks "Deny"
+   - Card shows X icon, fades out after 1 second
+   - AI acknowledges: "No problem. Let me know if you'd like to explore other approaches."
 
 ---
 
-### 5.3 Escalating Autonomy Tier & Experiencing Proactive Intervention
+### Flow 2: Adjusting Consent Tier
 
-**User Goal:** Increase AI autonomy to get proactive routine support, then experience an autonomous action
+**Goal**: User wants more proactive AI assistance and changes consent tier from Suggestive to Active.
 
-**Flow:**
-1. **Entry:** User navigates to Consent Dashboard via menu
-2. **Current State:** Screen shows current tier as "Suggestive" with description
-3. **User Intent:** User reads "Active" tier description: "Can nudge and remind with consent"
-4. **User Action:** Taps "Active" tier selector
-5. **Confirmation Modal:** Appears with warning:
-   - **Title:** "Enable Active Mode?"
-   - **Description:** "FELLO will proactively send reminders and nudges based on your goals and routines. You can always adjust or deny specific actions."
-   - **Buttons:** [Enable Active Mode] [Cancel]
-6. **User Confirms:** Taps "Enable Active Mode"
-7. **Feedback:** Modal closes, tier selector updates with success animation, Active badge appears
-8. **System Response:** Brief success message: "Active mode enabled. I'll now proactively support your goals."
-9. **User Returns to Chat:** Navigates back to chat interface (via back button or menu)
+**Steps**:
+1. **Trigger** → User clicks hamburger menu icon in header
+   - Side panel slides in from right (desktop) or full-screen overlay appears (mobile)
+   - Profile Summary section displays current tier: "Suggestive" badge
 
-**[Time passes — Next morning, 7:45 AM]**
+2. **Navigate to Settings** → User clicks "Change Tier" link in Profile Summary
+   - Settings modal fades in with backdrop blur
+   - Consent Tier Selection section displayed at top
 
-10. **Proactive Notification:** FELLO sends unprompted message in chat (notification on device if app closed):
-    - **Message:** "Good morning! You mentioned wanting to exercise 3x this week. You have a free hour at 8:00 AM. Should I set a reminder?"
-11. **Inline Consent Card Appears:**
-    - **Title:** "Suggested Action: Exercise Reminder"
-    - **Description:** "Set reminder for 8:00 AM exercise session"
-    - **Tier Badge:** "Active"
-    - **Buttons:** [Yes, set it] [Not today] [Adjust time]
-12. **User Response:** 
-    - **If Yes:** Reminder is set, FELLO confirms with message and checkmark
-    - **If Not today:** FELLO acknowledges, asks if different time works
-    - **If Adjust time:** Time picker appears, user selects 8:30 AM instead
-13. **Outcome:** Reminder is set (or not), FELLO continues monitoring for next intervention opportunity
-14. **User Reflection:** User realizes Active mode is working as expected, feels supported without being overwhelmed
+3. **Review Options** → User reads tier descriptions
+   - Four radio options visible:
+     - Passive (currently grey)
+     - Suggestive (currently selected, teal border)
+     - Active (amber badge visible)
+     - Autonomous (red badge, warning icon)
+   - User hovers over Active option, description highlights
 
-**Touchpoints:**
-- Consent Dashboard screen
-- TierSelector component
-- Confirmation modal
-- Tier badge update
-- Proactive chat message (push notification)
-- Inline ConsentCard in chat
-- Time picker adjustment (optional)
-- Success confirmation
+4. **Select New Tier** → User clicks "Active" radio button
+   - Active option now has teal border highlight
+   - Brief tooltip appears: "Othello will proactively plan actions for your approval"
 
----
+5. **Confirm Change** → Tier changes immediately (auto-save)
+   - Success toast appears: "Consent tier updated to Active"
+   - Profile Summary badge updates to "Active" (amber)
+   - Modal remains open for additional changes
 
-## 6. Accessibility & Responsive Considerations
+6. **Close Settings** → User clicks X button or backdrop
+   - Modal fades out
+   - Returns to chat view with side panel still open
 
-### 6.1 Accessibility (WCAG 2.1 AA Compliance)
+7. **Observe Behavior Change** → User continues chatting
+   - Next AI response includes more proactive suggestions:
+     - "I've outlined a 4-week exercise progression plan. May I schedule these sessions?"
+   - Suggestions now have "Active" tier badges
 
-**Color Contrast:**
-- All text meets minimum 4.5:1 contrast ratio against background
-- Interactive elements meet 3:1 contrast for UI components
-- Focus states have visible 2px outline in teal accent color
-
-**Keyboard Navigation:**
-- All interactive elements are keyboard-accessible
-- Logical tab order through components
-- Escape key closes modals and menus
-- Enter key submits forms and activates primary actions
-- Arrow keys navigate lists and selectors
-
-**Screen Reader Support:**
-- Semantic HTML structure (nav, main, article, aside)
-- ARIA labels for icon-only buttons
-- ARIA live regions for dynamic content (new messages, consent cards)
-- Alt text for all meaningful images/icons
-- Descriptive link text (no "click here")
-
-**Focus Management:**
-- Focus trapped in modals when open
-- Focus returns to triggering element on modal close
-- Clear focus indicators on all interactive elements
-- Skip-to-content link for keyboard users
-
-**Text & Content:**
-- Font sizes meet minimum 16px for body text
-- Line height 1.5+ for readability
-- Text is resizable up to 200% without breaking layout
-- Clear error messages with recovery instructions
-
-### 6.2 Responsive Behavior
-
-**Mobile (<640px):**
-- Single-column layout
-- Full-screen chat interface
-- Bottom navigation bar (optional: Chat, Shadow, Consent, Settings)
-- Transparency panel as full-screen modal overlay
-- Hamburger menu slides from left
-- Large touch targets (minimum 44x44px)
-- Swipe gestures for message actions
-- Native keyboard input handling
-
-**Tablet (640px-1024px):**
-- Chat occupies 60-70% width
-- Transparency panel as slide-in drawer (triggered by icon)
-- Consent dashboard in modal or drawer
-- Larger input area with multi-line support
-- Side-by-side content in Digital Shadow screen
-- Hover states for interactive elements
-
-**Desktop (>1024px):**
-- Chat occupies 65% width (max 800px)
-- Transparency panel persistent option (35%, max 400px)
-- Consent dashboard as dedicated screen with more detail
-- Keyboard shortcuts available (e.g., Cmd+K for search, Cmd+Enter to send)
-- Hover tooltips for additional context
-- Wider spacing, larger cards
-- Multi-column layout in Digital Shadow screen
-
-**Touch vs. Mouse:**
-- Touch: swipe gestures, long-press context menus, larger targets
-- Mouse: hover states, right-click context menus, cursor changes
+**Alternative Path**: User explores Autonomous tier but decides not to enable
+   - Clicks Autonomous option
+   - Warning dialog appears inline: "Autonomous tier allows pre-approved actions to execute automatically. Are you sure?"
+   - User clicks "Cancel", returns to Active selection
 
 ---
 
-## 7. Component State Management
+### Flow 3: Reviewing Ethical Reasoning Log
 
-**Global State (App-Level):**
-- Current autonomy tier
-- User authentication status
-- Digital Shadow data (cached)
-- Chat history (recent messages)
-- Pending actions count
+**Goal**: User wants transparency into how Othello filters suggestions.
 
-**Local Component State:**
-- Message input text
-- Modal open/closed status
-- Panel expanded/collapsed
-- Form validation errors
-- Loading/processing indicators
+**Steps**:
+1. **Open Side Panel** → User clicks hamburger menu icon
+   - Side panel slides in, showing three accordion sections
+   - Ethical Reasoning Log section is collapsed by default
 
-**State Persistence:**
-- Autonomy tier: persisted to backend, synced on app launch
-- Chat history: paginated, loaded on demand, cached locally
-- User preferences: synced to backend, cached locally
-- Consent decisions: immediately persisted to backend
+2. **Expand Log Section** → User clicks "Ethical Reasoning Log" header
+   - Section expands with accordion animation (250ms)
+   - Shows list of 5 recent entries:
+     - Entry 1: "Schedule morning workouts" — Approved for Suggestive (2 min ago)
+     - Entry 2: "Send email to boss" — Blocked (10 min ago)
+     - Entry 3: "Order groceries online" — Approved for Active (1 hour ago)
+     - Etc.
 
----
+3. **Investigate Blocked Suggestion** → User clicks Entry 2 to see why it was blocked
+   - Entry expands to show full ethical reasoning:
+     - "This action involves professional communication and was blocked because your current consent tier (Suggestive) does not permit automated messaging. To enable this, upgrade to Active tier and explicitly approve email actions."
+   - User reads reasoning
 
-## 8. Error & Empty States
+4. **Cross-Reference Chat** → User clicks suggestion title "Send email to boss"
+   - Side panel stays open
+   - Chat view automatically scrolls to that conversation (if still visible in history)
+   - Corresponding message and blocked suggestion card highlighted briefly (pulse animation)
 
-### 8.1 Error States
+5. **Review More Entries** → User scrolls down log
+   - Clicks "Load More" button at bottom
+   - Additional 5 entries load with fade-in animation
 
-**Network Error (Chat):**
-- Message fails to send
-- Red error indicator on message bubble
-- "Retry" button appears
-- Error message: "Couldn't send message. Check your connection and try again."
+6. **Close Panel** → User clicks X button or clicks chat area
+   - Side panel slides out
+   - User returns to full-screen chat view
 
-**Authentication Error:**
-- Full-screen modal: "Session expired. Please log in again."
-- "Log In" button redirects to auth flow
-- Local state preserved for recovery after re-auth
-
-**Consent Timeout:**
-- Consent card expires after 24 hours (configurable)
-- Card grays out with message: "This suggestion has expired."
-- User can request fresh suggestion
-
-**Digital Shadow Load Error:**
-- Empty state illustration with message: "Couldn't load your digital shadow."
-- "Try Again" button
-- "Contact Support" link
-
-### 8.2 Empty States
-
-**First-Time Chat (No Messages):**
-- Welcome illustration
-- Suggested prompts: "Help me plan my day", "Tell me about my digital shadow", "What can you do?"
-- Warm, inviting copy encouraging first interaction
-
-**No Pending Actions (Consent Dashboard):**
-- Illustration of checkmark
-- Message: "All caught up! No actions pending your approval."
-- Link to action history
-
-**Digital Shadow Building (New User):**
-- Illustration of brain with dots connecting
-- Message: "I'm just getting to know you. Keep chatting with me to build your digital shadow."
-- Progress indicator showing "X conversations analyzed"
-
-**Empty Action History:**
-- Message: "No actions yet. As I learn about you, I'll suggest ways to support your goals."
+**Insight Gained**: User understands Othello's filtering logic and feels confident in transparency.
 
 ---
 
-## 9. Performance & Loading Considerations
+## Implementation Notes
 
-**Initial Load:**
-- Skeleton screens for chat interface (< 200ms)
-- Lazy load transparency panel components
-- Defer non-critical JS until after first paint
+### Accessibility
+- All interactive elements must have minimum 44x44px touch targets
+- Keyboard navigation: Tab order follows logical flow (chat input → suggestions → side panel)
+- ARIA labels on icon buttons: "Open menu", "Send message", "Approve suggestion"
+- Focus trap in modals: Tab cycles within modal, ESC closes
+- Screen reader announcements: New messages, suggestion approvals, tier changes
+- Color contrast: WCAG AA minimum (4.5:1 for text, 3:1 for UI components)
 
-**Chat Scrolling:**
-- Virtualized list for long chat histories (render only visible messages)
-- Load previous messages on scroll-to-top (pagination)
-- Smooth scroll performance (60fps target)
+### Performance
+- Message list virtualization for long conversations (only render visible messages)
+- Lazy load side panel content (don't fetch logs until panel opened)
+- Debounce text input (300ms) to avoid excessive re-renders
+- Optimize bundle size: Code-split Settings modal, side panel components
+- Image/icon optimization: Use SVG for icons, lazy load avatars
 
-**Image & Icon Loading:**
-- SVG icons for fast rendering and scalability
-- No heavy images in Phase 1 (icon-based UI)
-- Lazy load user avatars if implemented
+### Responsive Design
+- Mobile-first approach: Design for 375px width minimum
+- Breakpoint strategy: Single column (mobile) → side-by-side (desktop)
+- Touch-friendly: 48px minimum button height, generous spacing
+- Desktop enhancements: Hover states, keyboard shortcuts (e.g., CMD+K for settings)
 
-**Network Optimization:**
-- Debounce typing indicators (only show after 500ms of AI processing)
-- Optimistic UI updates (show sent message immediately, sync in background)
-- WebSocket for real-time chat (fallback to polling)
+### Error States
+- Network error: Toast notification with retry button
+- API error: Inline error message in chat ("Sorry, I couldn't process that. Please try again.")
+- Empty states: Friendly messages ("No suggestions yet", "No conversation history")
+- Failed suggestion approval: Error toast + suggestion card returns to pending state
 
-**Cache Strategy:**
-- Cache autonomy tier and user preferences locally
-- Cache recent chat history (last 50 messages)
-- Invalidate Digital Shadow cache every 6 hours or on manual refresh
-
----
-
-## 10. Future Considerations (Phase 2+)
-
-**Voice Interaction:**
-- Voice input button in chat
-- Voice feedback for hands-free mode
-- Speech-to-text and text-to-speech integration
-
-**Multi-Modal Context:**
-- Photo/file attachment in chat
-- Image analysis for context (e.g., receipt, screenshot)
-- Calendar and email integrations with visual previews
-
-**Advanced Visualizations:**
-- Mood timeline chart (line graph over weeks/months)
-- Goal progress dashboards
-- Habit streak trackers
-
-**Collaboration Features:**
-- Share specific insights or suggestions with trusted contacts
-- Family/team consent dashboards
-
-**Wearable Integration:**
-- Notifications on smartwatch
-- Quick consent approvals from watch
-- Biometric context (heart rate, activity) for mood analysis
-
-**Internationalization:**
-- Multi-language support
-- RTL layout for Arabic, Hebrew
-- Locale-specific date/time formatting
+### Loading States
+- Initial app load: Full-screen skeleton loader with logo
+- Message sending: Optimistic UI (show immediately, update on confirmation)
+- AI response: Three-dot typing indicator in message list
+- Side panel data: Skeleton placeholders in Profile Summary and Log sections
+- Settings save: Brief spinner on consent tier radio buttons
 
 ---
 
-## Summary
-
-The OthelloMini UI is designed as a **chat-first, transparency-on-demand interface** that prioritizes conversational interaction while providing clear, consent-gated control over AI autonomy. The visual style is calm, focused, and warm—using dark tones with strategic accent colors to guide attention to consent prompts and ethical boundaries. 
-
-Core user flows center on **continuous conversation, informed consent, and transparent AI reasoning**, ensuring users feel empowered and in control at every step. The component architecture is modular and reusable, enabling rapid development and consistent user experience across screens.
-
-This UI contract provides a complete blueprint for Phase 1 implementation, with clear extension points for Phase 2 features like voice interaction, advanced visualizations, and deeper integrations.
+**End of UI/UX Contract**

@@ -1,146 +1,161 @@
 # Builder Directive — OthelloMini
 
-**Project Summary**  
-OthelloMini is an ethics-first multi-agent AI life intelligence platform delivering deeply personalized assistance through consent-tiered interaction, persistent user modeling, and proactive reality-shaping suggestions.
+## Project Summary
+OthelloMini is an ethics-first AI chat companion with consent-gated personalized assistance, featuring a multi-agent architecture with Othello ethical gatekeeper and persistent user profile modeling.
 
----
+## Build Phases
+This project consists of exactly **2 phases** that must be executed sequentially to completion:
 
-## Execution Flow
+- **Phase 0** — Backend Scaffold
+- **Phase 1** — Frontend & Ship
 
-The AI builder SHALL execute the following sequence to completion:
+## Execution Protocol
 
-### 1. Contract Ingestion
-- Read and parse ALL contract files in `/contracts/`:
-  - `tech_stack.md` — technology selections, framework versions, architecture decisions
-  - `phase_manifest.md` — deliverables, acceptance criteria, file structure per phase
-  - `frontend_specification.md` — UI requirements, component hierarchy, interaction patterns
-  - `backend_specification.md` — API design, data models, agent architecture, business logic
-  - `deployment_plan.md` — environment configuration, CI/CD pipeline, hosting setup
-  - `builder_directive.md` (this file) — operational procedures
+### Step 1: Read All Contracts
+Before beginning any implementation work, read and internalize the following contracts in order:
 
-### 2. Phase 0 — Backend Scaffold
-**Objective:** Establish the multi-agent Python backend with ethical filtering, user modeling, and core API.
+1. **physics.md** — Data model, API schemas, database structure, and technical constraints
+2. **blueprint.md** — System architecture, component relationships, and integration requirements  
+3. **phases.md** — Detailed phase deliverables, exit criteria, and acceptance requirements
 
-**Execution Steps:**
-1. Initialize Python project structure with virtual environment and dependency management
-2. Implement five-layer agent architecture:
-   - OutputGate (ethical filtering and consent enforcement)
-   - FELLO core agent (orchestration and reasoning)
-   - Sub-agents (psychological modeling: traits, behavior, aspirations, mood)
-   - RealityAgent (proactive intervention planning)
-3. Build data persistence layer for:
-   - User digital shadow (persistent psychological profile)
-   - Consent tier settings (Passive → Suggestive → Active → Autonomous)
-   - Conversation history and ethical audit logs
-4. Expose REST or WebSocket API endpoints for:
-   - Chat message handling (natural language input/output)
-   - Consent approval/denial actions
-   - Autonomy tier configuration
-   - Agent reasoning trace retrieval
-5. Implement ethical validation pipeline:
-   - All agent outputs filtered through OutputGate
-   - Consent tier enforcement before action execution
-   - Audit logging for transparency
-6. Write unit tests for core agent logic and ethical filtering
-7. Document API contract and agent interaction patterns
+Cross-reference these contracts throughout the build to ensure consistency and completeness.
 
-**Acceptance:**
-- Backend server runs and responds to health checks
-- Chat endpoint accepts messages and returns agent-filtered responses
-- Consent system blocks/allows actions per configured tier
-- All Phase 0 deliverables per `phase_manifest.md` satisfied
+### Step 2: Execute Phase 0 — Backend Scaffold
+Build the complete Python/FastAPI backend system including:
 
-### 3. Phase 1 — Frontend & Ship
-**Objective:** Build the chat-first UI with inline consent controls, deploy the integrated application.
+- Project scaffold with FastAPI, SQLAlchemy, Alembic
+- SQLite database with three tables: `user_profile`, `conversations`, `suggestions`
+- Database migrations and initialization script
+- Repository layer (ProfileRepository, ConversationRepository, SuggestionRepository)
+- Service layer (AIService with OpenAI GPT-4 integration, OthelloService ethical gatekeeper, ProfileService, ChatService)
+- Complete REST API with 10+ endpoints (chat, profile, suggestions, conversations, health)
+- Pydantic request/response models matching physics contract schemas
+- Docker configuration (`Dockerfile`, `docker-compose.yml` with db-init and api services)
+- Structured logging, error handling, CORS middleware
+- Testing framework setup with pytest
 
-**Execution Steps:**
-1. Initialize frontend project (framework per `tech_stack.md`)
-2. Implement primary chat interface:
-   - Fullscreen conversational UI with dark theme (navy/charcoal base)
-   - Message input/output with warm, journal-like aesthetic
-   - Real-time streaming of agent responses
-3. Build inline consent prompt components:
-   - Action approval/denial cards within chat flow
-   - Muted accent colors (soft teal/amber) for prompts
-   - Touch-optimized controls for mobile
-4. Create optional transparency panel (collapsible side drawer):
-   - Agent reasoning trace viewer
-   - Ethical validation logs
-   - Digital shadow summary (user profile insights)
-5. Implement settings/autonomy tier control page:
-   - Consent tier selector (Passive → Suggestive → Active → Autonomous)
-   - User preferences and privacy controls
-   - Accessible but non-intrusive placement
-6. Integrate frontend with backend API:
-   - Connect chat interface to message endpoints
-   - Wire consent actions to backend approval system
-   - Fetch and display agent traces and audit logs
-7. Apply responsive design and accessibility standards
-8. Write integration tests for critical user flows
-9. Configure deployment pipeline per `deployment_plan.md`:
-   - Environment variables and secrets management
-   - CI/CD automation (build, test, deploy)
-   - Production hosting setup
-10. Deploy integrated application to target environment
-11. Verify production readiness:
-    - End-to-end chat flow operational
-    - Consent system enforced in production
-    - Ethical filtering active
-    - Monitoring and logging functional
+**Phase 0 Exit Criteria:**
+- `docker-compose up --build` starts all services successfully
+- Database migrations create all three tables with proper relationships
+- API health check returns 200 "healthy" status
+- Default user profile seeded and retrievable
+- Chat endpoint accepts message and returns AI response with gated suggestions (live OpenAI API call)
+- Suggestion approve/deny endpoints function correctly
+- Profile update endpoint successfully changes consent tier
+- All endpoints return proper error responses for invalid input
+- SQLite database persists across container restarts
+- Logs show structured output with request correlation
 
-**Acceptance:**
-- Frontend accessible via web browser
-- Users can chat with FELLO and receive ethically filtered responses
-- Consent prompts appear inline; approvals/denials processed correctly
-- Transparency panel reveals agent reasoning and audit trail
-- All Phase 1 deliverables per `phase_manifest.md` satisfied
-- Application deployed and operational in production environment
+**Do not proceed to Phase 1 until all Phase 0 exit criteria are verified.**
 
-### 4. Commit & Finalize
-- Commit all source code, configuration, and documentation to repository
-- Tag release version
-- Generate final build report summarizing:
-  - Features implemented
-  - Tests passed
-  - Deployment URL and status
-  - Known limitations or future work
+### Step 3: Execute Phase 1 — Frontend & Ship
+Build the complete React/TypeScript frontend including:
 
----
+- React 18+ project with Vite, TypeScript, ESLint
+- TypeScript interfaces matching physics contract schemas
+- API integration layer with Axios client (chat, profile, suggestions, conversations endpoints)
+- Custom hooks (useProfile, useChat, useSuggestions, useConversations)
+- Core components:
+  - ChatView with message list and auto-scroll
+  - MessageInput with character count and keyboard shortcuts
+  - SuggestionCard with consent tier badge, risk indicator, expandable ethical reasoning
+  - ProfilePanel (collapsible) showing user traits and consent tier
+  - SettingsModal for consent tier adjustment and profile clear
+  - ConversationHistory with pagination
+  - HealthIndicator for API status
+- Responsive layout (desktop, tablet, mobile with breakpoints)
+- Dark theme styling (deep navy/charcoal background, soft teal accents, high-contrast text)
+- State management (Context API or Zustand for profile, local state for chat)
+- Loading states, error handling, toast notifications, accessibility features
+- Docker integration (frontend service in docker-compose.yml, nginx or Node static server)
+- Comprehensive README.md with project overview, setup instructions, usage examples, troubleshooting, tech stack, consent tier explanations, limitations
 
-## Phase List
+**Phase 1 Exit Criteria:**
+- `docker-compose up --build` starts backend + frontend, frontend accessible at http://localhost:3000
+- Chat interface loads and displays empty state
+- User can send message and receive AI response with suggestion cards
+- Suggestion cards display all fields (text, consent tier, ethical reasoning, approve/deny buttons)
+- Approve/deny buttons update suggestion status (verified in UI and backend)
+- Profile panel displays user data (consent tier, traits, topics)
+- Settings modal opens, allows consent tier change, saves successfully, persists after reload
+- "Clear Profile Data" resets profile to default
+- Conversation history loads with pagination
+- Application is fully responsive (mobile, tablet, desktop tested)
+- README.md is complete with all sections (description, setup, usage, troubleshooting, environment variables)
+- No console errors during normal usage
+- Application handles API errors gracefully
 
-| Phase | Name                     | Focus                                      |
-|-------|--------------------------|--------------------------------------------|
-| 0     | Backend Scaffold         | Multi-agent architecture, API, ethics core |
-| 1     | Frontend & Ship          | Chat UI, consent controls, deploy          |
+**Do not consider the build complete until all Phase 1 exit criteria are verified.**
 
----
+### Step 4: Final Commit & Verification
+After both phases are complete:
 
-## Boot Script
+1. Verify all exit criteria from both phases are met
+2. Run full end-to-end test: start services, send chat message, approve suggestion, change consent tier, verify persistence
+3. Confirm README.md completeness and accuracy
+4. Verify `.env.example` documents all required environment variables
+5. Ensure `.gitignore` excludes sensitive files (`.env`, `node_modules`, database files, build artifacts)
+6. Create final commit with message: "Complete OthelloMini MVP - Phase 0 (Backend) + Phase 1 (Frontend)"
+7. Verify git repository contains:
+   - `/backend` directory with FastAPI application
+   - `/frontend` directory with React application
+   - `docker-compose.yml` at root
+   - `.env.example` at root
+   - `README.md` at root
+   - `.gitignore` at root
 
-**boot_script_required:** `false`
+## Critical Requirements
 
-No custom boot script needed. Application launches via standard framework commands (e.g., `python app.py` for backend, `npm start` for frontend, or equivalent per tech stack).
+### OpenAI Integration
+- Backend must use OpenAI GPT-4 API (requires valid `OPENAI_API_KEY` environment variable)
+- AIService must handle API errors gracefully with retry logic
+- Token usage should be tracked and logged
+- Mock responses are not acceptable for the chat endpoint
 
----
+### Ethical Gatekeeper
+- OthelloService must evaluate all AI-generated suggestions before presentation
+- Rule-based validation must check for: harmful content, privacy violations, excessive commitment, manipulation patterns
+- Each suggestion must have ethical_reasoning JSON with human-readable justification
+- Consent tier assignment based on risk assessment
+- Suggestions exceeding user's consent tier must be filtered out
 
-## Build Directives
+### Data Persistence
+- SQLite database must persist in Docker volume (`./data`)
+- Database must survive container restarts
+- Default user profile must be seeded on first initialization
+- Alembic migrations must be version-controlled
 
-**CRITICAL REQUIREMENTS:**
-- The builder MUST complete BOTH Phase 0 and Phase 1 in sequence.
-- Ethical filtering (OutputGate) must be functional and enforced before ANY agent output reaches users.
-- Consent tier system must be operational and respected by all agents.
-- Digital shadow (persistent user model) must persist across sessions.
-- Chat interface must be the primary interaction surface; all other UI elements secondary.
-- Transparency features (reasoning trace, audit logs) must be accessible on demand.
-- All code must be production-quality: tested, documented, and deployable.
+### Responsive Design
+- Frontend must be usable on mobile devices (320px minimum width)
+- Layout must adapt to three breakpoints: mobile (<768px), tablet (768-1024px), desktop (>1024px)
+- Touch targets must be appropriately sized for mobile interaction
+- Side panel must collapse on mobile, be accessible via drawer or toggle
 
-**MINI BUILD CONSTRAINTS:**
-- Prioritize core functionality over extended features.
-- Use minimal viable implementations for sub-agents (can be expanded post-MVP).
-- Focus on demonstrating ethical filtering and consent tiers end-to-end.
-- Ensure chat + consent approval flow is fully operational.
+### Error Handling
+- Backend: all endpoints must return consistent error schema (Error model from physics contract)
+- Frontend: all API errors must display user-friendly messages (not raw error objects)
+- Network failures must not crash the application
+- Loading states must be shown during async operations
 
----
+### Documentation
+- README.md must be comprehensive enough for a new developer to set up and run the project
+- All environment variables must be documented
+- Setup instructions must be step-by-step with exact commands
+- Troubleshooting section must address common issues (API key errors, port conflicts, database locks)
 
-**End of Builder Directive**
+## Boot Script Flag
+`boot_script_required: false`
+
+The project uses Docker Compose for orchestration. No additional boot script is required beyond `docker-compose up --build`.
+
+## Acceptance Definition
+The build is complete when:
+1. All Phase 0 exit criteria are met and verified
+2. All Phase 1 exit criteria are met and verified
+3. End-to-end user flow works: start services → send chat message → view suggestion → approve/deny → change consent tier → verify persistence
+4. README.md is complete and accurate
+5. Repository is properly structured with all required files
+6. No placeholder code or TODO comments remain in critical paths
+7. `.env.example` documents all required environment variables
+
+**The builder must execute both phases to completion. Partial delivery is not acceptable.**

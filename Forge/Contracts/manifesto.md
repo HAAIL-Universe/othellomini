@@ -1,23 +1,29 @@
 # Manifesto: OthelloMini
 
-## Core Principles
+## I. Consent Before Capability
+Every feature, every agent action, every proactive suggestion must pass through an ethical gatekeeper before reaching the user. The system does not optimize for engagement or persuasion — it optimizes for user autonomy.
 
-### 1. Ethics Before Output
-- Every suggestion, action, and intervention must pass through the OutputGate ethical filter — no exceptions.
-- Consent boundaries are non-negotiable: the system operates only within user-defined autonomy tiers (Passive → Suggestive → Active → Autonomous).
-- Transparency on demand: users can always inspect ethical validation logs and agent reasoning traces.
+- All AI-generated actions surface as consent-gated prompts; no stealth automation
+- Tier-based consent model (Passive → Suggestive → Active → Autonomous) enforced at the architectural level
+- Default to transparency: when in doubt, show reasoning, ask permission, log the decision
 
-### 2. Genuine Understanding Over Feature Velocity
-- Persistent psychological modeling is the foundation — sub-agents continuously track traits, behavior, mood, and aspirations to build a true digital shadow.
-- Personalization depth trumps feature breadth: better to deliver one deeply understood suggestion than ten generic prompts.
-- The system remembers and evolves with the user over time, not per session.
+## II. Psychological Integrity Over Feature Velocity
+Personalization is not about data hoarding — it's about building a persistent, accurate model of the user's values, goals, and patterns. This requires thoughtful agent design, not rapid feature iteration.
 
-### 3. Calm Intelligence, Not Control Theater
-- Chat-first interface must feel like a trusted advisor, not a dashboard full of dials.
-- Ethical prompts and consent controls surface inline, gently — no aggressive interruptions or anxiety-inducing permission gates.
-- Complexity lives beneath simplicity: sophisticated multi-agent reasoning hidden behind warm, conversational interaction.
+- Sub-agents (traits, behavior, aspirations, mood) work as specialized observers, not intrusive trackers
+- Memory and modeling must be accurate, not just abundant; quality signals over data volume
+- No dark patterns: do not exploit psychological insights for retention or engagement metrics
 
-### 4. Proactive Reality Shaping, User-Gated Action
-- The RealityAgent plans real-world interventions (routine nudges, scheduling, goal coaching) but never executes without consent.
-- Suggestions must be actionable, specific, and contextually aware — not vague encouragement.
-- Autonomy escalation is gradual and always user-controlled: the system earns trust through consistency, not by demanding permissions upfront.
+## III. Simplicity as Ethical Interface Design
+Complex ethical systems must not overwhelm the user. A warm, conversational chat interface is the primary mode of interaction — transparency is available on demand, not imposed.
+
+- Chat-first UI: feels like a trusted advisor, not a control panel
+- Inline consent prompts: approve/deny without breaking conversation flow
+- Transparency on demand: agent reasoning, ethical logs, digital shadow visible when user chooses, hidden when not needed
+
+## IV. Architecture Reflects Values
+The five-layer brain-inspired model (OutputGate, orchestration, agents, memory, tools) is not just technical design — it's an ethical commitment. The OutputGate enforces boundaries; FELLO and sub-agents enable understanding; RealityAgent plans interventions only when consent permits.
+
+- Ethics layer (Othello/OutputGate) is non-negotiable and cannot be bypassed by lower layers
+- Agent autonomy balanced by architectural constraints: agents suggest, users decide
+- Memory persistence enables genuine understanding but must respect user-defined limits and deletion rights

@@ -1,343 +1,361 @@
-# OthelloMini Technology Stack Contract
+# OthelloMini Technology Stack
 
-## 1. Overview
+## Overview
 
-OthelloMini is a multi-agent, ethics-first AI life intelligence platform requiring sophisticated multi-agent orchestration, real-time chat, persistent psychological modeling, and consent-tiered ethical filtering. This stack prioritizes:
-
-- **Python-native AI/ML workflow** for multi-agent coordination and LLM integration
-- **Real-time conversational interface** with inline consent controls
-- **Persistent user modeling** with structured psychological profile storage
-- **Transparent ethical logging** and agent reasoning traces
-- **Single-compose deployment** for rapid 2-phase proof-of-concept iteration
-
-## 2. Backend Stack
-
-### Language & Runtime
-- **Python 3.11+**
-  - Native support for modern async/await patterns
-  - Type hints for agent interface contracts
-  - Rich ecosystem for AI/ML libraries
-
-### Core Framework
-- **FastAPI 0.109+**
-  - High-performance async API framework
-  - Automatic OpenAPI documentation
-  - WebSocket support for real-time chat
-  - Built-in validation via Pydantic v2
-  - Native async request handling for multi-agent coordination
-
-### Key Backend Libraries
-
-#### AI & LLM Integration
-- **openai 1.10+** - GPT-4/GPT-3.5-turbo integration for agent reasoning
-- **langchain 0.1+** - Multi-agent orchestration, prompt templates, memory management
-- **tiktoken 0.5+** - Token counting and context window management
-
-#### Agent Framework & Orchestration
-- **pydantic 2.5+** - Agent message schemas, validation, settings management
-- **pydantic-settings 2.1+** - Environment-based configuration
-- **celery 5.3+** - Asynchronous task queue for proactive agent background jobs (RealityAgent scheduling nudges)
-- **redis 5.0+** (Python client) - Celery broker, session state, agent working memory cache
-
-#### API & WebSocket
-- **uvicorn 0.27+** - ASGI server with WebSocket support
-- **websockets 12.0+** - WebSocket protocol handling for real-time chat
-- **python-multipart 0.0.6+** - File upload handling (future voice/image input)
-
-#### Authentication & Security
-- **python-jose[cryptography] 3.3+** - JWT token generation and validation
-- **passlib[bcrypt] 1.7+** - Password hashing
-- **python-dotenv 1.0+** - Environment variable management
-
-#### Data & Serialization
-- **sqlalchemy 2.0+** - Async ORM for PostgreSQL
-- **alembic 1.13+** - Database migrations
-- **psycopg2-binary 2.9+** - PostgreSQL adapter
-- **orjson 3.9+** - High-performance JSON serialization for agent message logs
-
-#### Observability & Logging
-- **structlog 24.1+** - Structured logging for agent reasoning traces
-- **prometheus-fastapi-instrumentator 6.1+** - Metrics for agent performance monitoring
-
-## 3. Database Stack
-
-### Primary Database
-- **PostgreSQL 16**
-  - Robust JSONB support for flexible psychological profile schemas
-  - Advanced indexing (GIN, B-tree) for agent query patterns
-  - ACID guarantees for consent tier changes and ethical filter logs
-  - Native array and full-text search for conversation history
-
-### Schema Design Patterns
-- **Users table** - Authentication, consent tier settings, autonomy preferences
-- **Conversations table** - Chat sessions with timestamp and context metadata
-- **Messages table** - Individual messages with agent attribution and ethical filter results
-- **DigitalShadow table** - JSONB psychological profile (traits, behavior patterns, aspirations, mood logs)
-- **ConsentLog table** - Audit trail for all user consent decisions and tier changes
-- **EthicalFilterLog table** - Othello gatekeeper decisions with reasoning traces
-- **AgentActions table** - Proactive interventions proposed by RealityAgent (status: pending/approved/denied/executed)
-
-### Cache & Session Store
-- **Redis 7.2+**
-  - Session state (active conversation context, agent working memory)
-  - Celery task broker for asynchronous proactive agent jobs
-  - Rate limiting for API endpoints
-  - Ephemeral agent scratch space (short-term reasoning chains)
-
-## 4. Frontend Stack
-
-### Framework
-- **React 18.2+**
-  - Component-based architecture for chat UI and consent cards
-  - Hooks for WebSocket connection management
-  - Concurrent rendering for smooth inline consent interactions
-
-### Build Tooling
-- **Vite 5.0+**
-  - Fast HMR for rapid UI iteration
-  - Optimized production builds
-  - Native ESM support
-
-### State Management & Data Fetching
-- **TanStack Query (React Query) 5.17+** - Server state management, caching, optimistic updates
-- **Zustand 4.4+** - Lightweight client state (UI toggles, transparency panel visibility, agent filter settings)
-
-### Real-Time Communication
-- **Socket.IO Client 4.6+** - WebSocket connection to FastAPI backend for chat streaming
-- **@microsoft/fetch-event-source 2.0+** - SSE fallback for agent response streaming
-
-### UI Components & Styling
-- **Tailwind CSS 3.4+** - Utility-first styling for dark navy/charcoal theme with muted teal/amber accents
-- **Headless UI 1.7+** - Accessible unstyled components (modals, dropdowns, consent dialogs)
-- **Radix UI Primitives 1.0+** - Collapsible panels for agent reasoning traces, ethical logs
-- **Lucide React 0.309+** - Icon system (consent checkmarks, agent avatars, ethical warning indicators)
-
-### Chat Interface
-- **react-markdown 9.0+** - Render formatted agent responses
-- **react-syntax-highlighter 15.5+** - Code block rendering in chat (if agent suggests technical solutions)
-- **date-fns 3.2+** - Timestamp formatting for conversation history
-
-### Form Handling & Validation
-- **React Hook Form 7.49+** - Performant forms for settings, consent tier adjustments
-- **Zod 3.22+** - Frontend validation schema matching Pydantic backend contracts
-
-### Routing
-- **React Router 6.21+** - Client-side routing (chat, settings, transparency logs, digital shadow summary)
-
-## 5. Deployment Stack
-
-### Containerization
-- **Docker 24+**
-  - Multi-stage builds for optimized image sizes
-  - Separate containers: `backend`, `frontend-nginx`, `postgres`, `redis`, `celery-worker`
-
-### Orchestration
-- **Docker Compose v2.24+**
-  - Single-compose deployment for 2-phase proof-of-concept
-  - Named volumes for persistent data (PostgreSQL, Redis)
-  - Health checks for service dependencies
-  - Unified network for inter-service communication
-
-### Web Server
-- **Nginx 1.25+** (frontend container)
-  - Serve static React build
-  - Reverse proxy to FastAPI backend
-  - WebSocket upgrade handling
-  - Gzip compression for assets
-
-### Process Management
-- **Uvicorn workers** (managed by Docker entrypoint)
-  - Multi-worker FastAPI deployment for concurrency
-  - Graceful reload support
-
-### Background Workers
-- **Celery worker container**
-  - Separate container for asynchronous agent tasks
-  - Proactive RealityAgent interventions (scheduled nudges, goal check-ins)
-  - Periodic digital shadow refinement jobs
-
-## 6. Environment Variables
-
-| Variable Name | Description | Required | Default | Example |
-|--------------|-------------|----------|---------|---------|
-| **Backend - Core** |
-| `ENVIRONMENT` | Deployment environment | Yes | - | `development`, `production` |
-| `SECRET_KEY` | JWT signing key and app secret | Yes | - | `your-256-bit-secret-key-here` |
-| `API_HOST` | Backend API host | No | `0.0.0.0` | `0.0.0.0` |
-| `API_PORT` | Backend API port | No | `8000` | `8000` |
-| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | Yes | - | `http://localhost:3000,http://localhost:8080` |
-| **Database** |
-| `DATABASE_URL` | PostgreSQL connection string | Yes | - | `postgresql+asyncpg://user:pass@postgres:5432/othellomini` |
-| `POSTGRES_USER` | PostgreSQL username | Yes | - | `othello` |
-| `POSTGRES_PASSWORD` | PostgreSQL password | Yes | - | `secure_password_here` |
-| `POSTGRES_DB` | PostgreSQL database name | Yes | - | `othellomini` |
-| `DB_POOL_SIZE` | Connection pool size | No | `10` | `10` |
-| `DB_MAX_OVERFLOW` | Max overflow connections | No | `20` | `20` |
-| **Redis** |
-| `REDIS_URL` | Redis connection string | Yes | - | `redis://redis:6379/0` |
-| `REDIS_PASSWORD` | Redis password (if enabled) | No | - | `redis_secure_pass` |
-| **Celery** |
-| `CELERY_BROKER_URL` | Celery broker URL | Yes | - | `redis://redis:6379/1` |
-| `CELERY_RESULT_BACKEND` | Celery result backend URL | Yes | - | `redis://redis:6379/2` |
-| **AI/LLM Integration** |
-| `OPENAI_API_KEY` | OpenAI API key for GPT models | Yes | - | `sk-proj-...` |
-| `OPENAI_MODEL_DEFAULT` | Default GPT model for agents | No | `gpt-4-turbo-preview` | `gpt-4-turbo-preview`, `gpt-3.5-turbo` |
-| `OPENAI_MODEL_ETHICS` | Model for Othello ethical filtering | No | `gpt-4-turbo-preview` | `gpt-4-turbo-preview` |
-| `OPENAI_MAX_TOKENS` | Max tokens per agent response | No | `1500` | `1500` |
-| `OPENAI_TEMPERATURE` | Temperature for agent responses | No | `0.7` | `0.7` |
-| **Agent Configuration** |
-| `AGENT_REASONING_LOG_ENABLED` | Enable detailed agent reasoning logs | No | `true` | `true`, `false` |
-| `AGENT_TRANSPARENCY_MODE` | Expose reasoning traces to frontend | No | `true` | `true`, `false` |
-| `ETHICAL_FILTER_STRICT_MODE` | Strict ethical filtering (reject ambiguous) | No | `false` | `true`, `false` |
-| `DEFAULT_CONSENT_TIER` | Default consent tier for new users | No | `Passive` | `Passive`, `Suggestive`, `Active`, `Autonomous` |
-| **Session & Auth** |
-| `JWT_SECRET_KEY` | JWT token signing key | Yes | - | `jwt-secret-256-bit-key` |
-| `JWT_ALGORITHM` | JWT signing algorithm | No | `HS256` | `HS256` |
-| `JWT_EXPIRATION_HOURS` | JWT token expiration in hours | No | `168` | `168` (7 days) |
-| `SESSION_TIMEOUT_MINUTES` | Inactive session timeout | No | `60` | `60` |
-| **Frontend** |
-| `VITE_API_BASE_URL` | Backend API base URL | Yes | - | `http://localhost:8000` |
-| `VITE_WS_URL` | WebSocket URL for real-time chat | Yes | - | `ws://localhost:8000/ws` |
-| `VITE_APP_NAME` | Application display name | No | `OthelloMini` | `OthelloMini` |
-| `VITE_ENABLE_TRANSPARENCY_PANEL` | Show agent reasoning panel | No | `true` | `true`, `false` |
-| **Logging & Monitoring** |
-| `LOG_LEVEL` | Application log level | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
-| `LOG_FORMAT` | Log output format | No | `json` | `json`, `console` |
-| `ENABLE_METRICS` | Enable Prometheus metrics endpoint | No | `true` | `true`, `false` |
-| **Rate Limiting** |
-| `RATE_LIMIT_ENABLED` | Enable API rate limiting | No | `true` | `true`, `false` |
-| `RATE_LIMIT_PER_MINUTE` | Max requests per minute per user | No | `60` | `60` |
-
-## 7. Development Tools
-
-### Code Quality
-- **black 24.1+** - Python code formatting
-- **ruff 0.1+** - Fast Python linter (replaces flake8, isort)
-- **mypy 1.8+** - Static type checking
-- **pytest 8.0+** - Backend testing framework
-- **pytest-asyncio 0.23+** - Async test support
-- **httpx 0.26+** - Async HTTP client for API tests
-
-### Frontend Development
-- **ESLint 8.56+** - JavaScript/TypeScript linting
-- **Prettier 3.2+** - Code formatting
-- **TypeScript 5.3+** - Static typing for React components
-- **Vitest 1.2+** - Unit testing for React components
-- **@testing-library/react 14.1+** - Component testing utilities
-
-### Development Workflow
-- **pre-commit 3.6+** - Git hooks for code quality checks
-- **Docker Compose (dev override)** - Hot-reload volumes for local development
-
-## 8. Deployment Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Docker Compose Single-Host Deployment                  │
-├─────────────────────────────────────────────────────────┤
-│                                                           │
-│  ┌─────────────┐      ┌──────────────────────────┐      │
-│  │   Nginx     │◄─────┤   Frontend (React)       │      │
-│  │   :80       │      │   Static Build           │      │
-│  └──────┬──────┘      └──────────────────────────┘      │
-│         │                                                │
-│         │ /api/*  (reverse proxy)                       │
-│         │ /ws     (WebSocket upgrade)                   │
-│         ▼                                                │
-│  ┌──────────────────────────────────────────────┐       │
-│  │   FastAPI Backend (Uvicorn)                  │       │
-│  │   :8000                                      │       │
-│  │   - REST API                                 │       │
-│  │   - WebSocket chat endpoint                  │       │
-│  │   - Multi-agent orchestration                │       │
-│  └───────┬─────────────────────┬────────────────┘       │
-│          │                     │                        │
-│          ▼                     ▼                        │
-│  ┌──────────────┐      ┌─────────────────────┐         │
-│  │ PostgreSQL   │      │  Redis :6379        │         │
-│  │ :5432        │      │  - Session store    │         │
-│  │ - User data  │      │  - Celery broker    │         │
-│  │ - Profiles   │      │  - Agent cache      │         │
-│  │ - Logs       │      └─────────┬───────────┘         │
-│  └──────────────┘                │                      │
-│                                   │                      │
-│                            ┌──────▼──────────────┐      │
-│                            │  Celery Worker      │      │
-│                            │  - Background tasks │      │
-│                            │  - RealityAgent     │      │
-│                            └─────────────────────┘      │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Container Services
-
-1. **frontend-nginx** (Nginx + React build)
-   - Serves static assets
-   - Reverse proxies `/api/*` to backend
-   - WebSocket upgrade for `/ws`
-
-2. **backend** (FastAPI + Uvicorn)
-   - Multi-worker async API
-   - WebSocket endpoint for real-time chat
-   - Multi-agent coordination (FELLO, Othello, RealityAgent)
-   - Ethical filtering and consent validation
-
-3. **postgres** (PostgreSQL 16)
-   - Persistent user data, conversations, digital shadows
-   - Ethical filter logs, consent audit trail
-
-4. **redis** (Redis 7.2)
-   - Session state and agent working memory
-   - Celery broker and result backend
-   - Rate limiting store
-
-5. **celery-worker** (Celery + Python backend code)
-   - Asynchronous proactive agent tasks
-   - Scheduled nudges and goal check-ins
-   - Periodic digital shadow refinement
-
-### Volume Strategy
-- **postgres-data** - PostgreSQL data directory (persistent)
-- **redis-data** - Redis dump.rdb (persistent, optional for POC)
-- **backend-logs** - Structured agent reasoning logs (bind mount for dev, named volume for prod)
-
-### Network
-- Single Docker bridge network `othellomini-network` for inter-service communication
-- Services reference each other by service name (e.g., `postgres`, `redis`)
-
-## 9. Proof-of-Concept Constraints
-
-This stack is optimized for a **2-phase proof-of-concept**:
-
-- **Single-host deployment** via Docker Compose (no Kubernetes, no distributed orchestration)
-- **Vertical scaling only** (increase container resources, not replica count)
-- **Simple secrets management** (environment variables, no Vault or external secret stores)
-- **File-based logging** (no ELK stack or centralized log aggregation)
-- **Basic monitoring** (Prometheus metrics endpoint exposed, no Grafana deployment in compose)
-- **No CDN or edge caching** (Nginx serves static assets directly)
-- **Local HTTPS termination** (optional self-signed cert for development, not production-grade TLS)
-
-### Phase 1 (Core Functionality)
-Focus: Conversational interface + ethical filtering + basic digital shadow
-- Backend API with OpenAI integration
-- WebSocket chat
-- Othello ethical filter (consent tier: Passive only)
-- Basic React chat UI
-- PostgreSQL user/conversation/message tables
-
-### Phase 2 (Multi-Agent Intelligence)
-Focus: Multi-agent coordination + proactive interventions + transparency
-- FELLO multi-agent orchestration with sub-agents
-- RealityAgent proactive suggestions
-- Celery background worker for scheduled actions
-- Digital shadow JSONB schema with psychological modeling
-- Transparency panel (agent reasoning traces, ethical logs)
-- Consent tier progression (Passive → Suggestive → Active)
+OthelloMini is a 2-phase proof-of-concept built with a Python/FastAPI backend, React/TypeScript frontend, and SQLite database. The system is containerized with Docker and orchestrated via single docker-compose configuration for local development. This stack prioritizes rapid iteration, simplicity, and minimal infrastructure overhead while maintaining clean separation between API, database, and UI layers.
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2025-01-24  
-**Target Deployment:** Docker Compose single-host proof-of-concept  
-**Production Readiness:** Not production-ready; suitable for 2-phase MVP demonstration and validation
+## Backend Stack
+
+### Language & Runtime
+- **Python**: 3.11.9
+- **Package Manager**: pip 24.0+ with `requirements.txt`
+- **Virtual Environment**: Managed within Docker container
+
+### Framework
+- **FastAPI**: 0.109.0
+  - ASGI web framework for high-performance async REST APIs
+  - Auto-generated OpenAPI documentation (`/docs`, `/redoc`)
+  - Built-in request validation via Pydantic
+  - Dependency injection for service layer
+
+### Core Libraries
+
+**Web & API**
+- `uvicorn[standard]`: 0.27.0 – ASGI server with WebSocket support and auto-reload
+- `pydantic`: 2.5.3 – Data validation and settings management
+- `pydantic-settings`: 2.1.0 – Environment variable configuration
+
+**Database & ORM**
+- `sqlalchemy`: 2.0.25 – SQL toolkit and ORM with async support
+- `alembic`: 1.13.1 – Database migration tool
+- `aiosqlite`: 0.19.0 – Async SQLite driver for SQLAlchemy
+
+**AI & External Services**
+- `openai`: 1.10.0 – Official OpenAI Python client for GPT-4 integration
+- `httpx`: 0.26.0 – Async HTTP client (dependency for OpenAI SDK)
+
+**Utilities**
+- `python-dotenv`: 1.0.0 – Load environment variables from `.env`
+- `python-json-logger`: 2.0.7 – Structured JSON logging
+- `tenacity`: 8.2.3 – Retry logic for OpenAI API calls
+
+**Development & Testing**
+- `pytest`: 7.4.4 – Testing framework
+- `pytest-asyncio`: 0.23.3 – Async test support
+- `httpx`: 0.26.0 – API test client (same as production dependency)
+- `faker`: 22.0.0 – Generate mock user profile data
+
+---
+
+## Database
+
+### Engine
+- **SQLite**: 3.42+ (bundled with Python 3.11)
+- **File Location**: `/app/data/othello_mini.db` (mounted volume in Docker)
+- **Driver**: `aiosqlite` for async operations via SQLAlchemy 2.0
+
+### Schema Overview
+
+**Tables**
+1. `user_profile`
+   - `id` (INTEGER PRIMARY KEY)
+   - `user_id` (TEXT UNIQUE NOT NULL) – Fixed identifier (single-user MVP)
+   - `traits` (JSON) – Psychological traits array
+   - `preferences` (JSON) – User preferences object
+   - `consent_tier` (TEXT) – Enum: 'Passive' | 'Suggestive' | 'Active' | 'Autonomous'
+   - `created_at` (TIMESTAMP)
+   - `updated_at` (TIMESTAMP)
+
+2. `conversations`
+   - `id` (INTEGER PRIMARY KEY)
+   - `user_id` (TEXT, FOREIGN KEY)
+   - `role` (TEXT) – 'user' | 'assistant' | 'system'
+   - `content` (TEXT) – Message content
+   - `timestamp` (TIMESTAMP)
+
+3. `suggestions`
+   - `id` (INTEGER PRIMARY KEY)
+   - `user_id` (TEXT, FOREIGN KEY)
+   - `suggestion_text` (TEXT) – AI-generated action description
+   - `consent_tier` (TEXT) – Required tier for action
+   - `ethical_reasoning` (TEXT) – Othello gatekeeper justification
+   - `status` (TEXT) – 'pending' | 'approved' | 'denied'
+   - `created_at` (TIMESTAMP)
+   - `resolved_at` (TIMESTAMP NULL)
+
+### Migration Management
+- **Tool**: Alembic 1.13.1
+- **Migration Path**: `backend/alembic/versions/`
+- **Auto-run**: `db-init` service in docker-compose runs `alembic upgrade head` before API starts
+
+---
+
+## Frontend Stack
+
+### Framework & Build
+- **React**: 18.2.0 – Component-based UI library
+- **TypeScript**: 5.3.3 – Static typing for JavaScript
+- **Vite**: 5.0.11 – Fast build tool and dev server with HMR
+
+### Core Libraries
+
+**UI & State**
+- `react-dom`: 18.2.0 – React rendering for web
+- `zustand`: 4.4.7 – Lightweight state management (chat messages, user profile, suggestions)
+
+**HTTP & API**
+- `axios`: 1.6.5 – HTTP client for API calls to FastAPI backend
+
+**Styling**
+- `tailwindcss`: 3.4.1 – Utility-first CSS framework
+- `postcss`: 8.4.33 – CSS processing (required by Tailwind)
+- `autoprefixer`: 10.4.16 – Vendor prefix automation
+
+**UI Components**
+- `react-markdown`: 9.0.1 – Render AI responses with markdown support
+- `lucide-react`: 0.312.0 – Icon library (consent badges, expand/collapse icons)
+
+**Development**
+- `@vitejs/plugin-react`: 4.2.1 – Vite plugin for React Fast Refresh
+- `eslint`: 8.56.0 – Code linting
+- `@typescript-eslint/parser`: 6.19.0 – TypeScript ESLint parser
+- `@typescript-eslint/eslint-plugin`: 6.19.0 – TypeScript-specific lint rules
+
+### Build Output
+- **Development**: Vite dev server on port 3000 with hot module replacement
+- **Production**: Static bundle served from `frontend/dist` (not used in MVP, Docker runs dev server)
+
+---
+
+## Deployment
+
+### Containerization
+
+**Docker**
+- Docker Engine: 24.0+
+- Docker Compose: 2.23+
+
+**Backend Dockerfile** (`backend/Dockerfile`)
+```dockerfile
+FROM python:3.11.9-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose API port
+EXPOSE 8000
+
+# Run FastAPI with uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+```
+
+**Frontend Dockerfile** (`frontend/Dockerfile`)
+```dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose dev server port
+EXPOSE 3000
+
+# Run Vite dev server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+```
+
+### Orchestration
+
+**docker-compose.yml**
+```yaml
+version: '3.9'
+
+services:
+  db-init:
+    image: python:3.11.9-slim
+    volumes:
+      - ./backend:/app
+      - db-data:/app/data
+    working_dir: /app
+    environment:
+      - DATABASE_URL=sqlite:///data/othello_mini.db
+    command: >
+      sh -c "pip install -q alembic sqlalchemy aiosqlite &&
+             alembic upgrade head"
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///data/othello_mini.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - db-data:/app/data
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  db-data:
+    driver: local
+```
+
+### Environment Setup
+
+**Root `.env` file** (not committed to Git)
+```env
+OPENAI_API_KEY=sk-proj-...
+```
+
+**Startup Commands**
+```bash
+# First-time setup
+docker-compose up --build
+
+# Subsequent runs
+docker-compose up
+
+# Shutdown
+docker-compose down
+
+# Reset database
+docker-compose down -v
+```
+
+---
+
+## Environment Variables
+
+| Variable Name       | Description                                                                 | Required | Default Value              | Used By         |
+|---------------------|-----------------------------------------------------------------------------|----------|----------------------------|-----------------|
+| `OPENAI_API_KEY`    | OpenAI API key for GPT-4 chat completion and suggestion generation          | Yes      | (none)                     | Backend (API)   |
+| `DATABASE_URL`      | SQLite database connection string                                           | Yes      | `sqlite:///data/othello_mini.db` | Backend (API, db-init) |
+| `LOG_LEVEL`         | Logging verbosity level                                                     | No       | `INFO`                     | Backend (API)   |
+| `CORS_ORIGINS`      | Allowed origins for CORS requests (comma-separated)                         | No       | `http://localhost:3000`    | Backend (API)   |
+| `VITE_API_BASE_URL` | Base URL for FastAPI backend (used by frontend Axios client)                | Yes      | `http://localhost:8000`    | Frontend        |
+| `DEFAULT_USER_ID`   | Fixed user identifier for single-user MVP                                   | No       | `user_001`                 | Backend (API)   |
+| `MAX_CONVERSATION_HISTORY` | Number of recent messages to include in AI context window            | No       | `20`                       | Backend (API)   |
+| `OPENAI_MODEL`      | OpenAI model identifier for chat completions                                | No       | `gpt-4-turbo-preview`      | Backend (API)   |
+| `OPENAI_TIMEOUT`    | Timeout in seconds for OpenAI API requests                                  | No       | `30`                       | Backend (API)   |
+
+### Notes on Environment Variables
+
+- **Secrets Management**: `OPENAI_API_KEY` must be set in `.env` file (excluded via `.gitignore`). No secrets in code or Dockerfiles.
+- **Frontend Environment**: Vite requires `VITE_` prefix for environment variables exposed to browser. `VITE_API_BASE_URL` is injected at build time.
+- **Database Persistence**: `DATABASE_URL` points to `/app/data/othello_mini.db` inside container, mounted to `db-data` named volume for persistence across restarts.
+- **CORS Configuration**: `CORS_ORIGINS` allows frontend at `http://localhost:3000` to call API at `http://localhost:8000`. Adjust for production domains.
+
+---
+
+## Development Workflow
+
+### Prerequisites
+- Docker Desktop 24+ (Windows/Mac) or Docker Engine + Compose plugin (Linux)
+- OpenAI API key with GPT-4 access
+- 4 GB available RAM
+- Git
+
+### Local Setup
+1. Clone repository: `git clone <repo-url> othello-mini && cd othello-mini`
+2. Create `.env`: `echo "OPENAI_API_KEY=sk-..." > .env`
+3. Start services: `docker-compose up --build`
+4. Access frontend: `http://localhost:3000`
+5. Access API docs: `http://localhost:8000/docs`
+
+### Hot Reload
+- **Backend**: Uvicorn auto-reloads on file changes in `backend/` (volume-mounted)
+- **Frontend**: Vite HMR updates browser on file changes in `frontend/src/` (volume-mounted)
+
+### Database Inspection
+```bash
+# Access SQLite shell
+docker-compose exec api sqlite3 /app/data/othello_mini.db
+
+# View tables
+.tables
+
+# Query user profile
+SELECT * FROM user_profile;
+```
+
+### Testing
+```bash
+# Backend unit tests
+docker-compose exec api pytest tests/
+
+# Frontend (manual testing via browser for MVP)
+# Automated frontend tests deferred to post-MVP
+```
+
+---
+
+## Dependency Rationale
+
+### Why FastAPI?
+- Auto-generated OpenAPI docs reduce API documentation overhead
+- Native async support for concurrent OpenAI API calls
+- Pydantic validation eliminates manual request parsing errors
+- Mature ecosystem with 70k+ GitHub stars
+
+### Why SQLite?
+- Zero-configuration database (no separate DB container)
+- Sufficient for single-user MVP (<10k records)
+- File-based persistence simplifies Docker volume management
+- Easy migration to PostgreSQL if scaling to multi-user in full build
+
+### Why Vite over Create React App?
+- 10-20x faster cold start (esbuild vs Webpack)
+- Native ES modules = instant HMR
+- Optimized production builds with Rollup
+- CRA is deprecated; Vite is React team's recommended tooling
+
+### Why Zustand over Redux?
+- 90% less boilerplate (no actions/reducers/providers)
+- Hooks-first API matches React mental model
+- 3 KB bundle size vs 45 KB for Redux Toolkit
+- Sufficient for chat state + profile + suggestions (no complex middleware needed)
+
+### Why Tailwind CSS?
+- Utility-first enables rapid UI iteration without CSS file sprawl
+- Purges unused styles in production (minimal bundle size)
+- Design tokens (colors, spacing) enforce visual consistency
+- JIT compiler generates only used classes (fast rebuilds)
+
+---
+
+**End of Stack Contract**
