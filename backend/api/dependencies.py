@@ -27,6 +27,11 @@ from backend.services.chat_service import ChatService
 from backend.config import settings
 
 
+def get_user_id() -> str:
+    """Return the default user ID for single-user MVP."""
+    return settings.default_user_id
+
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Provide an async database session with automatic commit/rollback lifecycle.
