@@ -1,0 +1,106 @@
+{
+  "description": "Architectural boundaries for OthelloMini enforce strict layer separation to maintain modularity, testability, and ethical integrity. The system follows a four-layer architecture: Presentation (React frontend), API (FastAPI routes), Service (business logic), and Repository (data access). Key principles: (1) unidirectional dependencies flow downward only (Presentation \u2192 API \u2192 Service \u2192 Repository \u2192 Database), (2) no layer may bypass its immediate downstream neighbor, (3) OthelloService ethical gating MUST be invoked by ChatService before any suggestion reaches the API layer, (4) Repositories encapsulate all ORM/SQL logic\u2014Services interact via repository interfaces only, (5) external API calls (OpenAI) are isolated within AIService and never invoked directly from routes or repositories.",
+  "layers": [
+    {
+      "name": "Presentation",
+      "glob": "frontend/src/**/*.{ts,tsx,jsx,js}",
+      "forbidden": [
+        {
+          "pattern": "backend/**/*",
+          "reason": "Forbidden in Presentation layer"
+        },
+        {
+          "pattern": "**/repositories/**/*",
+          "reason": "Forbidden in Presentation layer"
+        },
+        {
+          "pattern": "**/services/**/*",
+          "reason": "Forbidden in Presentation layer"
+        },
+        {
+          "pattern": "**/models/**/*.py",
+          "reason": "Forbidden in Presentation layer"
+        },
+        {
+          "pattern": "**/*.sql",
+          "reason": "Forbidden in Presentation layer"
+        }
+      ]
+    },
+    {
+      "name": "API",
+      "glob": "backend/api/**/*.py",
+      "forbidden": [
+        {
+          "pattern": "backend/repositories/**/*",
+          "reason": "Forbidden in API layer"
+        },
+        {
+          "pattern": "backend/data/**/*",
+          "reason": "Forbidden in API layer"
+        },
+        {
+          "pattern": "**/*.sql",
+          "reason": "Forbidden in API layer"
+        },
+        {
+          "pattern": "openai",
+          "reason": "Forbidden in API layer"
+        },
+        {
+          "pattern": "anthropic",
+          "reason": "Forbidden in API layer"
+        }
+      ]
+    },
+    {
+      "name": "Service",
+      "glob": "backend/services/**/*.py",
+      "forbidden": [
+        {
+          "pattern": "backend/api/**/*",
+          "reason": "Forbidden in Service layer"
+        },
+        {
+          "pattern": "fastapi.Request",
+          "reason": "Forbidden in Service layer"
+        },
+        {
+          "pattern": "fastapi.Response",
+          "reason": "Forbidden in Service layer"
+        },
+        {
+          "pattern": "**/*.sql",
+          "reason": "Forbidden in Service layer"
+        }
+      ]
+    },
+    {
+      "name": "Repository",
+      "glob": "backend/repositories/**/*.py",
+      "forbidden": [
+        {
+          "pattern": "backend/api/**/*",
+          "reason": "Forbidden in Repository layer"
+        },
+        {
+          "pattern": "backend/services/**/*",
+          "reason": "Forbidden in Repository layer"
+        },
+        {
+          "pattern": "openai",
+          "reason": "Forbidden in Repository layer"
+        },
+        {
+          "pattern": "anthropic",
+          "reason": "Forbidden in Repository layer"
+        },
+        {
+          "pattern": "fastapi",
+          "reason": "Forbidden in Repository layer"
+        }
+      ]
+    }
+  ],
+  "known_violations": []
+}
